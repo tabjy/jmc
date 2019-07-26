@@ -38,7 +38,6 @@ import org.openjdk.jmc.joverflow.support.RefChainElement;
  * Used to listed to model updates.
  */
 public interface ModelListener {
-
 	/**
 	 * For each model update, this method is called with every object included in the model (that is not filtered out)
 	 * 

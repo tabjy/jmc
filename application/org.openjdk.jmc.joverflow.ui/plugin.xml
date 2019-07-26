@@ -34,7 +34,6 @@
 <?eclipse version="3.4"?>
 <plugin>
 
-
  <extension
        point="org.openjdk.jmc.rjmx.actionProvider">
        <action
@@ -45,7 +44,7 @@
        </action>
     </extension>
  <extension point="org.eclipse.ui.views">
- 	  <category name="JOverflow" id="JOverflow"></category>
+     <category name="JOverflow" id="JOverflow"/>
       <view
             allowMultiple="false"
             category="JOverflow"
