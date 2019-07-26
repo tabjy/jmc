@@ -32,8 +32,6 @@
  */
 package org.openjdk.jmc.joverflow.ui;
 
-import javafx.application.Platform;
-
 import org.osgi.framework.BundleContext;
 
 import org.openjdk.jmc.ui.MCAbstractUIPlugin;
@@ -62,8 +60,6 @@ public class JOverflowPlugin extends MCAbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		m_plugin = this;
-		// Workaround to prevent JavaFx from shutting down. May be removed when RT-23752 is implemented.
-		Platform.setImplicitExit(false);
 	}
 
 	@Override

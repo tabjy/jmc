@@ -32,18 +32,12 @@
  */
 package org.openjdk.jmc.joverflow.ui;
 
-import javafx.scene.Scene;
-
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.IPage;
 import org.eclipse.ui.part.MessagePage;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.PageBookView;
-
-import org.openjdk.jmc.joverflow.heap.model.JavaHeapObject;
-import org.openjdk.jmc.joverflow.ui.fx.AbstractFxPage;
-import org.openjdk.jmc.joverflow.ui.viewers.JavaThingViewer;
 
 public class InstancesPageBookView extends PageBookView {
 
@@ -60,6 +54,7 @@ public class InstancesPageBookView extends PageBookView {
 	protected PageRec doCreatePage(IWorkbenchPart part) {
 		if (part instanceof JOverflowEditor) {
 			final JOverflowEditor editor = ((JOverflowEditor) part);
+			/*
 			final JavaThingViewer thingViewer = new JavaThingViewer() {
 
 				@Override
@@ -82,6 +77,7 @@ public class InstancesPageBookView extends PageBookView {
 			initPage(page);
 			page.createControl(getPageBook());
 			return new PageRec(part, page);
+			 */
 		}
 		return null;
 	}

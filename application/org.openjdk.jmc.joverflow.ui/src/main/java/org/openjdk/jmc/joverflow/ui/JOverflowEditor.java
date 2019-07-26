@@ -35,67 +35,56 @@ package org.openjdk.jmc.joverflow.ui;
 import java.util.Collection;
 import java.util.concurrent.Executors;
 
-import javafx.application.Platform;
-import javafx.scene.Scene;
-
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IPathEditorInput;
 
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.part.EditorPart;
 import org.openjdk.jmc.ui.misc.DialogToolkit;
 import org.openjdk.jmc.joverflow.heap.model.Snapshot;
-import org.openjdk.jmc.joverflow.ui.fx.AbstractStaticFxEditor;
 import org.openjdk.jmc.joverflow.ui.model.ModelLoader;
 import org.openjdk.jmc.joverflow.ui.model.ModelLoaderListener;
 import org.openjdk.jmc.joverflow.ui.model.ReferenceChain;
 
-public class JOverflowEditor extends AbstractStaticFxEditor {
+public class JOverflowEditor extends EditorPart {
 
-	private JOverflowFxUi ui;
 	private ModelLoader loader;
 	public static final String EDITOR_ID = "org.openjdk.jmc.joverflow.ui.JOverflowEditor";
 	private Snapshot snapshot;
 
-	@Override
-	protected synchronized Scene createScene() throws Exception {
+	/*
+	protected synchronized Scene createScene() {
 		IEditorInput input = getEditorInput();
 		IPathEditorInput ipei;
 		if (input instanceof IPathEditorInput) {
 			ipei = (IPathEditorInput) input;
 		} else {
-			ipei = (IPathEditorInput) input.getAdapter(IPathEditorInput.class);
+			ipei = input.getAdapter(IPathEditorInput.class);
 		}
-		final LoadingUi loderUi = new LoadingUi();
-		ui = new JOverflowFxUi();
-		loderUi.getChildren().add(0, ui);
 		if (ipei == null) {
 			// Not likely to be null, but guard just in case
-			throw new Exception("The JOverflow editor cannot handle the provided editor input");
+			throw new IllegalArgumentException("The JOverflow editor cannot handle the provided editor input");
 		}
 		final String fileName = ipei.getPath().toOSString();
 		loader = new ModelLoader(fileName, new ModelLoaderListener() {
 
 			@Override
 			public void onProgressUpdate(final double progress) {
-				Platform.runLater(new Runnable() {
-
-					@Override
-					public void run() {
-						loderUi.setProgress(progress);
-					}
+				Platform.runLater(() -> {
+//						loderUi.setProgress(progress);
 				});
 			}
 
 			@Override
 			public void onModelLoaded(Snapshot snapshot, final Collection<ReferenceChain> model) {
 				setModelLoaded(snapshot);
-				Platform.runLater(new Runnable() {
-
-					@Override
-					public void run() {
-						ui.setModel(model);
-						loderUi.clear();
-					}
+				Platform.runLater(() -> {
+//					ui.setModel(model);
+//					loderUi.clear();
 				});
 			}
 
@@ -113,9 +102,9 @@ public class JOverflowEditor extends AbstractStaticFxEditor {
 				cancelAndClearLoader();
 			}
 		});
-		loderUi.getStylesheets().add(JOverflowFxUi.class.getResource("grey_round_tables.css").toExternalForm());
 
 		Executors.newSingleThreadExecutor().submit(loader);
+		/*
 		addToolbarAction(new Action("Reset") {
 			{
 				setImageDescriptor(JOverflowPlugin.getDefault().getMCImageDescriptor(JOverflowPlugin.ICON_UNDO_EDIT));
@@ -126,7 +115,14 @@ public class JOverflowEditor extends AbstractStaticFxEditor {
 				ui.reset();
 			}
 		});
-		return new Scene(loderUi);
+		
+		return null;
+	}
+*/
+
+	@Override
+	public void createPartControl(Composite parent) {
+
 	}
 
 	@Override
@@ -136,6 +132,36 @@ public class JOverflowEditor extends AbstractStaticFxEditor {
 		if (snapshot != null) {
 			snapshot.discard();
 		}
+	}
+
+	@Override
+	public void setFocus() {
+
+	}
+
+	@Override
+	public void doSave(IProgressMonitor monitor) {
+
+	}
+
+	@Override
+	public void doSaveAs() {
+
+	}
+
+	@Override
+	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
+
+	}
+
+	@Override
+	public boolean isDirty() {
+		return false;
+	}
+
+	@Override
+	public boolean isSaveAsAllowed() {
+		return false;
 	}
 
 	@Override
@@ -159,10 +185,6 @@ public class JOverflowEditor extends AbstractStaticFxEditor {
 			this.snapshot = snapshot;
 			loader = null;
 		}
-	}
-
-	synchronized JOverflowFxUi getJOverflowFxUi() {
-		return ui;
 	}
 
 	synchronized Snapshot getSnapshot() {
