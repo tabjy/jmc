@@ -32,23 +32,73 @@
  */
 package org.openjdk.jmc.joverflow.ui.model;
 
+import java.util.List;
+
+import org.openjdk.jmc.joverflow.support.RefChainElement;
+
 /**
- * A collection of objects of a specific class and qualifier marked with a ClusterType. Qualifier may be null. Each
- * cluster holds aggregated data for the objects.
+ * Aggregates a number of referrers with a the same initial referrer chain Holds overhead/memory/size for the
+ * {@code ObjectCluster} referred to by these referrers.
  */
-public interface ObjectCluster {
+public class ReferrerItem {
 
-	ClusterType getType();
+	private long ovhd;
+	private long memory;
+	private int size;
+	private final String referrer;
+	private final boolean isBranch;
+	private final List<String> commonReferrers;
 
-	String getClassName();
+	ReferrerItem(List<String> commonReferrers, String referrer, long memory, long overhead, int objectCount, boolean isBranch) {
+		this.isBranch = isBranch;
+		this.referrer = referrer;
+		this.commonReferrers = commonReferrers;
+		ovhd = overhead;
+		this.memory = memory;
+		size = objectCount;
+	}
 
-	String getQualifier();
+	ReferrerItem(List<String> parentReferrers, String referrer) {
+		this(parentReferrers, referrer, 0, 0, 0, true);
+	}
 
-	int getMemory();
+	void addObjectCluster(ObjectCluster oc) {
+		ovhd += oc.getOverhead();
+		memory += oc.getMemory();
+		size += oc.getObjectCount();
+	}
 
-	int getOverhead();
+	public boolean check(RefChainElement ref) {
+		for (String parentRefName : commonReferrers) {
+			if (ref == null || !parentRefName.equals(ref.toString())) {
+				return false;
+			}
+			ref = ref.getReferer();
+		}
+		return ref != null && referrer.equals(ref.toString());
+	}
 
-	int getObjectCount();
+	public boolean isBranch() {
+		return isBranch;
+	}
 
-	int getGlobalObjectIndex(int indexInCluster);
+	public int getLevel() {
+		return commonReferrers.size();
+	}
+
+	public long getOvhd() {
+		return ovhd;
+	}
+
+	public long getMemory() {
+		return memory;
+	}
+
+	public int getSize() {
+		return size;
+	}
+
+	public String getName() {
+		return referrer;
+	}
 }

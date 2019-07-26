@@ -32,23 +32,75 @@
  */
 package org.openjdk.jmc.joverflow.ui.model;
 
+import org.openjdk.jmc.joverflow.heap.model.JavaThing;
+
 /**
- * A collection of objects of a specific class and qualifier marked with a ClusterType. Qualifier may be null. Each
- * cluster holds aggregated data for the objects.
+ * A {@code TreeItem} for a {@code JavaThing}
  */
-public interface ObjectCluster {
+public class JavaThingItem implements TreeItem {
 
-	ClusterType getType();
+	private Iterable<JavaThingItem> children;
+	private boolean expanded;
+	private final int level;
+	private final JavaThing content;
+	private final String name;
+	private final String value;
+	private final String size;
 
-	String getClassName();
+	public JavaThingItem(int level, String name, JavaThing content) {
+		this(level, name, content == null ? "null" : content.valueAsString(), content == null ? 0 : content.getSize(), content); //$NON-NLS-1$
+	}
 
-	String getQualifier();
+	public JavaThingItem(int level, String name, String value, int size, JavaThing content) {
+		this.level = level;
+		this.content = content;
+		this.name = String.valueOf(name);
+		this.value = String.valueOf(value);
+		this.size = Integer.toString(size);
+	}
 
-	int getMemory();
+	public String getName() {
+		return name;
+	}
 
-	int getOverhead();
+	public String getValue() {
+		return value;
+	}
 
-	int getObjectCount();
+	public String getSize() {
+		return size;
+	}
 
-	int getGlobalObjectIndex(int indexInCluster);
+	public Iterable<JavaThingItem> getChildItems() {
+		return children;
+	}
+
+	public void setChildItems(Iterable<JavaThingItem> children) {
+		this.children = children;
+	}
+
+	@Override
+	public void setExpended(boolean expanded) {
+		this.expanded = expanded;
+		if (!expanded && children != null) {
+			// Collapse children with parent
+			for (TreeItem c : children) {
+				c.setExpended(false);
+			}
+		}
+	}
+
+	@Override
+	public boolean isExpanded() {
+		return expanded;
+	}
+
+	@Override
+	public int getLevel() {
+		return level;
+	}
+
+	public JavaThing getContent() {
+		return content;
+	}
 }

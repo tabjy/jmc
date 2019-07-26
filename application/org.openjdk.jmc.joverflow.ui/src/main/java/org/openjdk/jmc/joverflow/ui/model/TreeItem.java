@@ -32,23 +32,11 @@
  */
 package org.openjdk.jmc.joverflow.ui.model;
 
-/**
- * A collection of objects of a specific class and qualifier marked with a ClusterType. Qualifier may be null. Each
- * cluster holds aggregated data for the objects.
- */
-public interface ObjectCluster {
+interface TreeItem {
 
-	ClusterType getType();
+	boolean isExpanded();
 
-	String getClassName();
+	void setExpended(boolean expanded);
 
-	String getQualifier();
-
-	int getMemory();
-
-	int getOverhead();
-
-	int getObjectCount();
-
-	int getGlobalObjectIndex(int indexInCluster);
+	int getLevel();
 }

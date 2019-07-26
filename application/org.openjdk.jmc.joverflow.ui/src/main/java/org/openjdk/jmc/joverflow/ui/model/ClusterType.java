@@ -53,7 +53,7 @@ public enum ClusterType {
 	DUPLICATE_STRING("Duplicate Strings"),
 	DUPLICATE_ARRAY("Duplicate Arrays"),
 	ALL_OBJECTS("All Objects");
-	private String headline;
+	private final String headline;
 
 	ClusterType(String headline) {
 		this.headline = headline;
@@ -94,7 +94,7 @@ public enum ClusterType {
 		case SMALL:
 			return ClusterType.SMALL_COLLECTION;
 		default:
-			throw new RuntimeException("Unknown problem kind " + pk);
+			throw new RuntimeException("Unknown problem kind " + pk); //$NON-NLS-1$
 		}
 	}
 
