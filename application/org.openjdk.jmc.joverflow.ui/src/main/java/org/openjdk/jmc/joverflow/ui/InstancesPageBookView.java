@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * 
+ * Copyright (c) 2018, 2019, Oracle and/or its affiliates. All rights reserved.
+ *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * The contents of this file are subject to the terms of either the Universal Permissive License
@@ -10,17 +10,17 @@
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted
  * provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions
  * and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of
  * conditions and the following disclaimer in the documentation and/or other materials provided with
  * the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its contributors may be used to
  * endorse or promote products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
@@ -32,18 +32,12 @@
  */
 package org.openjdk.jmc.joverflow.ui;
 
-import javafx.scene.Scene;
-
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.IPage;
 import org.eclipse.ui.part.MessagePage;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.PageBookView;
-
-import org.openjdk.jmc.joverflow.heap.model.JavaHeapObject;
-import org.openjdk.jmc.joverflow.ui.fx.AbstractFxPage;
-import org.openjdk.jmc.joverflow.ui.viewers.JavaThingViewer;
 
 public class InstancesPageBookView extends PageBookView {
 
@@ -60,25 +54,10 @@ public class InstancesPageBookView extends PageBookView {
 	protected PageRec doCreatePage(IWorkbenchPart part) {
 		if (part instanceof JOverflowEditor) {
 			final JOverflowEditor editor = ((JOverflowEditor) part);
-			final JavaThingViewer thingViewer = new JavaThingViewer() {
 
-				@Override
-				protected JavaHeapObject getObjectAtPostion(int globalObjectPos) {
-					return editor.getSnapshot().getObjectAtGlobalIndex(globalObjectPos);
-				}
+			JavaThingPage page = new JavaThingPage(editor);
+			editor.addUiLoadedListener((ui) -> ui.addModelListener(page));
 
-			};
-			thingViewer.getUi().getStylesheets()
-					.add(InstancesPageBookView.class.getResource("grey.css").toExternalForm());
-			AbstractFxPage page = new AbstractFxPage() {
-
-				@Override
-				protected Scene createScene() throws Exception {
-					return new Scene(thingViewer.getUi());
-				}
-
-			};
-			((JOverflowEditor) part).getJOverflowFxUi().addModelListener(thingViewer);
 			initPage(page);
 			page.createControl(getPageBook());
 			return new PageRec(part, page);
@@ -88,6 +67,13 @@ public class InstancesPageBookView extends PageBookView {
 
 	@Override
 	protected void doDestroyPage(IWorkbenchPart part, PageRec pageRecord) {
+		if (part instanceof JOverflowEditor) {
+			final JOverflowUi ui = ((JOverflowEditor) part).getJOverflowUi();
+			if (ui != null) {
+				ui.removeModelListener((JavaThingPage) pageRecord.page);
+			}
+		}
+
 		pageRecord.page.dispose();
 		pageRecord.dispose();
 	}
@@ -106,5 +92,4 @@ public class InstancesPageBookView extends PageBookView {
 		// We only care about JOverflowEditor
 		return (part instanceof JOverflowEditor);
 	}
-
 }
