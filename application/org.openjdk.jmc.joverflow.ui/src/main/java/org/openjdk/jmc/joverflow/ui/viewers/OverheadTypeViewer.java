@@ -4,6 +4,7 @@ import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.TableItem;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.ClusterType;
 import org.openjdk.jmc.joverflow.ui.model.ModelListener;
@@ -15,20 +16,11 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
     private MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
 
     public OverheadTypeViewer(Composite parent, int style) {
-        initItems();
-
-        mTableViewer = new MemoryStatisticsTableViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION);
-        mTableViewer.addSelectionChangedListener(event -> {
-          // TODO: notify selection changed
-        });
-    }
-
-    private void initItems() {
-        mItems = new MemoryStatisticsItem[ClusterType.values().length];
-
         for (ClusterType t : ClusterType.values()) {
             mItems[t.ordinal()] = new MemoryStatisticsItem(t, 0, 0, 0);
         }
+
+        mTableViewer = new MemoryStatisticsTableViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION);
     }
 
     @Override
@@ -37,8 +29,23 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
     }
 
     @Override
+    public void addSelectionChangedListener(ISelectionChangedListener listener) {
+        mTableViewer.addSelectionChangedListener(listener);
+    }
+
+    @Override
     public ISelection getSelection() {
         return mTableViewer.getSelection();
+    }
+
+    @Override
+    public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+        mTableViewer.removeSelectionChangedListener(listener);
+    }
+
+    @Override
+    public void setSelection(ISelection selection) {
+        mTableViewer.setSelection(selection);
     }
 
     @Override
@@ -61,7 +68,12 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
     @Override
     public void allIncluded() {
         mTableViewer.setInput(mItems);
-        initItems();
+    }
+
+    public void resetItems() {
+        for (MemoryStatisticsItem item : mItems) {
+            item.reset();
+        }
     }
 
     public ClusterType getCurrentType() {
@@ -72,10 +84,18 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
         if (!(selection instanceof StructuredSelection)) {
             return null;
         }
-        return (ClusterType) ((StructuredSelection) getSelection()).getFirstElement();
+        return (ClusterType) ((MemoryStatisticsItem) ((StructuredSelection) getSelection()).getFirstElement()).getId();
     }
 
     public void setTotalMemory(long memory) {
         mTableViewer.setTotalMemory(memory);
+    }
+
+    public void reset() {
+        for (TableItem item : mTableViewer.getTable().getItems()) {
+            if (ClusterType.ALL_OBJECTS == ((MemoryStatisticsItem) item.getData()).getId()) {
+                mTableViewer.getTable().setSelection(item);
+            }
+        }
     }
 }

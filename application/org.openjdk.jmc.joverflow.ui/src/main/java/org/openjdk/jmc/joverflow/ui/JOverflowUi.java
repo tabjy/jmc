@@ -9,7 +9,10 @@ import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.ClusterType;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.model.ReferenceChain;
+import org.openjdk.jmc.joverflow.ui.viewers.AncestorViewer;
+import org.openjdk.jmc.joverflow.ui.viewers.ClusterGroupViewer;
 import org.openjdk.jmc.joverflow.ui.viewers.OverheadTypeViewer;
+import org.openjdk.jmc.joverflow.ui.viewers.ReferrerViewer;
 
 import java.util.Collection;
 
@@ -19,9 +22,9 @@ public class JOverflowUi extends Composite {
     private long mTotalMemory;
 
     private final OverheadTypeViewer mOverheadTypeViewer; // left-top viewer
-    private final TableViewer mClusterGroupViewer; // left-bottom viewer
-    private final TableViewer mReferrerViewer; // right-top viewer
-    private final TableViewer mAncestorViewer; // right-bottom viewer
+    private final ClusterGroupViewer mClusterGroupViewer; // left-bottom viewer
+    private final ReferrerViewer mReferrerViewer; // right-top viewer
+    private final AncestorViewer mAncestorViewer; // right-bottom viewer
 
     public JOverflowUi(Composite parent, int style) {
         super(parent, style);
@@ -37,6 +40,7 @@ public class JOverflowUi extends Composite {
                 topLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mOverheadTypeViewer = new OverheadTypeViewer(topLeftContainer, SWT.BORDER | SWT.FULL_SELECTION);
+                mOverheadTypeViewer.addSelectionChangedListener((event) -> updateModel());
             }
 
             // Cluster Group Viewer
@@ -44,25 +48,7 @@ public class JOverflowUi extends Composite {
                 Group bottomLeftContainer = new Group(vSashLeft, SWT.NONE);
                 bottomLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-
-                {
-                    // TODO: abstract to ClusterGroupViewer
-                    SashForm bottomLeftSash = new SashForm(bottomLeftContainer, SWT.NONE);
-                    Group classPieChartContainer = new Group(bottomLeftSash, SWT.NONE);
-                    classPieChartContainer.setLayout(new FillLayout(SWT.VERTICAL));
-
-                    Label classLabel = new Label(classPieChartContainer, SWT.NONE);
-                    classLabel.setText("Class");
-
-                    Button classPieChart = new Button(classPieChartContainer, SWT.NONE);
-                    classPieChart.setText("[Pie Chart]");
-
-                    Group classTableContainer = new Group(bottomLeftSash, SWT.NONE);
-                    classTableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
-
-                    // TODO: init mClusterGroupViewer
-                    mClusterGroupViewer = new TableViewer(classTableContainer, SWT.BORDER | SWT.FULL_SELECTION);
-                }
+                mClusterGroupViewer = new ClusterGroupViewer(bottomLeftContainer, SWT.BORDER | SWT.FULL_SELECTION);
             }
             vSashLeft.setWeights(new int[]{1, 1});
         }
@@ -74,8 +60,7 @@ public class JOverflowUi extends Composite {
                 Group topRightContainer = new Group(vSashRight, SWT.NONE);
                 topRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-                // TODO: init mReferrerViewer
-                mReferrerViewer = new TableViewer(topRightContainer, SWT.BORDER | SWT.FULL_SELECTION);
+                mReferrerViewer = new ReferrerViewer(topRightContainer, SWT.BORDER | SWT.FULL_SELECTION);
             }
 
             // AncestorViewer
@@ -83,24 +68,7 @@ public class JOverflowUi extends Composite {
                 Group bottomRightContainer = new Group(vSashRight, SWT.NONE);
                 bottomRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-                {
-                    // TODO: abstract to AncestorViewer
-                    SashForm bottomRightSash = new SashForm(bottomRightContainer, SWT.NONE);
-                    Group ancestorReferrerPieChartContainer = new Group(bottomRightSash, SWT.NONE);
-                    ancestorReferrerPieChartContainer.setLayout(new FillLayout(SWT.VERTICAL));
-
-                    Label ancestorReferrerLabel = new Label(ancestorReferrerPieChartContainer, SWT.NONE);
-                    ancestorReferrerLabel.setText("Ancestor referrer");
-
-                    Button ancestorReferrerPieChart = new Button(ancestorReferrerPieChartContainer, SWT.NONE);
-                    ancestorReferrerPieChart.setText("[Pie Chart]");
-
-                    Group ancestorReferrerTableContainer = new Group(bottomRightSash, SWT.NONE);
-                    ancestorReferrerTableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
-
-                    // TODO: init mAncestorViewer
-                    mAncestorViewer = new TableViewer(ancestorReferrerTableContainer, SWT.BORDER | SWT.FULL_SELECTION);
-                }
+                mAncestorViewer = new AncestorViewer(bottomRightContainer, SWT.BORDER | SWT.FULL_SELECTION);
             }
             vSashRight.setWeights(new int[]{1, 1});
         }
@@ -125,7 +93,11 @@ public class JOverflowUi extends Composite {
 
     private void updateModel() {
         ClusterType currentType = mOverheadTypeViewer.getCurrentType();
-//        mClusterGroupViewer.setQualifierName(currentType == ClusterType.DUPLICATE_STRING || currentType == ClusterType.DUPLICATE_ARRAY ? "Duplicate" : null);
+
+        // reset viewers
+        mOverheadTypeViewer.resetItems();
+
+        mClusterGroupViewer.setQualifierName(currentType == ClusterType.DUPLICATE_STRING || currentType == ClusterType.DUPLICATE_ARRAY ? "Duplicate" : "Class");
         // Loop all reference chains
         for (ReferenceChain chain : mModel) {
             RefChainElement rce = chain.getReferenceChain();
@@ -141,18 +113,18 @@ public class JOverflowUi extends Composite {
                         mOverheadTypeViewer.include(oc, rce);
                         // Add type object cluster matches current type and add to all other viewers
                         if (oc.getType() == currentType) {
-//                            for (ModelListener v : modelListeners) {
-//                                v.include(oc, chain.getReferenceChain());
-//                            }
+                            mReferrerViewer.include(oc, chain.getReferenceChain());
+                            mClusterGroupViewer.include(oc, chain.getReferenceChain());
+                            mAncestorViewer.include(oc, chain.getReferenceChain());
                         }
                     }
                 }
             }
         }
         // Notify all that update is done
-//        for (ModelListener v : modelListeners) {
-//            v.allIncluded();
-//        }
+        mReferrerViewer.allIncluded();
+        mClusterGroupViewer.allIncluded();
+        mAncestorViewer.allIncluded();
 
         mOverheadTypeViewer.setTotalMemory(mTotalMemory);
         mOverheadTypeViewer.allIncluded();
@@ -160,5 +132,6 @@ public class JOverflowUi extends Composite {
 
     public void reset() {
         // TODO: reset all tables
+        mOverheadTypeViewer.reset();
     }
 }

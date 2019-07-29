@@ -1,27 +1,23 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import org.eclipse.jface.viewers.ContentViewer;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 
-public class ReferrerViewer implements ModelListener {
+public class ReferrerViewer extends ContentViewer implements ModelListener {
 
-    private final ReferrerTable ui;
+    //    private final ReferrerTable ui;
     private ReferrerItemBuilder builder;
 
-//    private final Callback<RefChainElement, Boolean> filter = new Callback<RefChainElement, Boolean>() {
-//
-//        @Override
-//        public Boolean call(RefChainElement param) {
-//            return ui.selectedItem == null || ui.selectedItem.check(param);
-//            return null;
-//        }
-//    };
-
-    public ReferrerViewer(Runnable updateCallback) {
-//        ui = new ReferrerTable(updateCallback);
-        ui = null;
+    public ReferrerViewer(Composite parent, int style) {
+        // TODO: init table
+        new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
     }
 
     @Override
@@ -35,6 +31,11 @@ public class ReferrerViewer implements ModelListener {
     }
 
     @Override
+    public void resetItems() {
+
+    }
+
+    @Override
     public void include(ObjectCluster oc, RefChainElement ref) {
         if (builder == null) {
             builder = new ReferrerItemBuilder(oc, ref);
@@ -43,16 +44,27 @@ public class ReferrerViewer implements ModelListener {
         }
     }
 
-    public TableViewer getUi() {
-//        return ui;
+    public void reset() {
+//        ui.selectedItem = null;
+    }
+
+    @Override
+    public Control getControl() {
         return null;
     }
 
-//    public Callback<RefChainElement, Boolean> getFilter() {
-//        return filter;
-//    }
+    @Override
+    public ISelection getSelection() {
+        return null;
+    }
 
-    public void reset() {
-//        ui.selectedItem = null;
+    @Override
+    public void refresh() {
+
+    }
+
+    @Override
+    public void setSelection(ISelection selection, boolean reveal) {
+
     }
 }
