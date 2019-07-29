@@ -63,7 +63,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class JOverflowEditor extends EditorPart {
-    public static final String EDITOR_ID = "org.openjdk.jmc.joverflow.mUi.JOverflowEditor";
+    public static final String EDITOR_ID = "org.openjdk.jmc.joverflow.mJOverflowUi.JOverflowEditor";
 
     private final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
 
@@ -72,7 +72,7 @@ public class JOverflowEditor extends EditorPart {
     private Composite mParentComposite;
     private ProgressIndicator mProgressIndicator;
     private Form mForm;
-    private JOverflowUi mUi;
+    private JOverflowUi mJOverflowUi;
 
     private IPathEditorInput mInput;
     private ModelLoader mLoader;
@@ -135,6 +135,7 @@ public class JOverflowEditor extends EditorPart {
                     }
 
                     createJoverflowUi(mParentComposite);
+                    mJOverflowUi.setModel(mModel);
                 });
             }
 
@@ -196,8 +197,7 @@ public class JOverflowEditor extends EditorPart {
 
             @Override
             public void run() {
-                // TODO: call reset
-                System.err.println("TODO: call reset");
+                mJOverflowUi.reset();
             }
         }));
         mForm.updateToolBar();
@@ -205,7 +205,7 @@ public class JOverflowEditor extends EditorPart {
         Composite body = mForm.getBody();
         body.setLayout(new FillLayout());
 
-        mUi = new JOverflowUi(body, SWT.NONE);
+        mJOverflowUi = new JOverflowUi(body, SWT.NONE);
     }
 
     @Override
