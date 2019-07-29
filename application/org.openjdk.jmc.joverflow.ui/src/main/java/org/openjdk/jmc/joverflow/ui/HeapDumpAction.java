@@ -72,39 +72,29 @@ public class HeapDumpAction implements IActionFactory {
 
 	@Override
 	public Executable createAction(final IServerHandle serverHandle) {
-		return new Executable() {
-
-			@Override
-			public void execute() {
-				IConnectionHandle connector = null;
-				try {
-					JVMDescriptor jvmInfo = serverHandle.getServerDescriptor().getJvmInfo();
-					FileOpener opener = getFileOpener(jvmInfo != null && jvmInfo.isAttachable());
-					if (opener.file != null) {
-						connector = serverHandle.connect("Create Heap Dump");
-						MBeanServerConnection connection = connector.getServiceOrThrow(MBeanServerConnection.class);
-						Object[] params = new Object[] {opener.file.getAbsolutePath(), Boolean.TRUE};
-						String[] sig = new String[] {String.class.getName(), boolean.class.getName()};
-						connection.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"), "dumpHeap", params, sig);
-						DisplayToolkit.safeAsyncExec(opener);
-					}
-				} catch (Exception e) {
-					Throwable root = e;
-					while (root.getCause() != null) {
-						root = root.getCause();
-					}
-					final String message = root.getMessage() != null ? root.getMessage() : root.toString();
-					DisplayToolkit.safeAsyncExec(new Runnable() {
-
-						@Override
-						public void run() {
-							DialogToolkit.showError(Display.getCurrent().getActiveShell(),
-									"Failed to create Heap Dump", message);
-						}
-					});
-				} finally {
-					IOToolkit.closeSilently(connector);
+		return () -> {
+			IConnectionHandle connector = null;
+			try {
+				JVMDescriptor jvmInfo = serverHandle.getServerDescriptor().getJvmInfo();
+				FileOpener opener = getFileOpener(jvmInfo != null && jvmInfo.isAttachable());
+				if (opener.file != null) {
+					connector = serverHandle.connect("Create Heap Dump");
+					MBeanServerConnection connection = connector.getServiceOrThrow(MBeanServerConnection.class);
+					Object[] params = new Object[] {opener.file.getAbsolutePath(), Boolean.TRUE};
+					String[] sig = new String[] {String.class.getName(), boolean.class.getName()};
+					connection.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"), "dumpHeap", params, sig);
+					DisplayToolkit.safeAsyncExec(opener);
 				}
+			} catch (Exception e) {
+				Throwable root = e;
+				while (root.getCause() != null) {
+					root = root.getCause();
+				}
+				final String message = root.getMessage() != null ? root.getMessage() : root.toString();
+				DisplayToolkit.safeAsyncExec(() -> DialogToolkit.showError(Display.getCurrent().getActiveShell(),
+						"Failed to create Heap Dump", message));
+			} finally {
+				IOToolkit.closeSilently(connector);
 			}
 		};
 	}
@@ -137,17 +127,14 @@ public class HeapDumpAction implements IActionFactory {
 					}
 				}
 			};
-			DisplayToolkit.safeSyncExec(new Runnable() {
-				@Override
-				public void run() {
-					InputDialog dialog = new InputDialog(Display.getCurrent().getActiveShell(), "Enter a destination file",
-							"Enter a path to the destination file in the remote filesystem. "
-									+ "You will have to make the file available in the local filesystem manually, "
-									+ "for example by moving it or using a shared filesystem.", "", null);
-					if (dialog.open() == Window.OK) {
-						String s = dialog.getValue();
-						opener.file = new File(s.endsWith(HPROF_FILE_EXTENSION) ? s : s + "." + HPROF_FILE_EXTENSION);
-					}
+			DisplayToolkit.safeSyncExec(() -> {
+				InputDialog dialog = new InputDialog(Display.getCurrent().getActiveShell(), "Enter a destination file",
+						"Enter a path to the destination file in the remote filesystem. "
+								+ "You will have to make the file available in the local filesystem manually, "
+								+ "for example by moving it or using a shared filesystem.", "", null);
+				if (dialog.open() == Window.OK) {
+					String s = dialog.getValue();
+					opener.file = new File(s.endsWith(HPROF_FILE_EXTENSION) ? s : s + "." + HPROF_FILE_EXTENSION);
 				}
 			});
 			return opener;

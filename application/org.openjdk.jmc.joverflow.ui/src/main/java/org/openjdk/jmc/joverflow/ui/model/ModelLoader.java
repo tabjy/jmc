@@ -67,19 +67,13 @@ import org.openjdk.jmc.joverflow.util.VerboseOutputCollector;
 public class ModelLoader implements ProblemRecorder, Runnable {
 
 	private final String fileName;
-	private Map<RefChainElement, Map<ClusterType, Map<String, ObjectClusterImpl>>> clusterMap = new IdentityHashMap<RefChainElement, Map<ClusterType, Map<String, ObjectClusterImpl>>>();
+	private Map<RefChainElement, Map<ClusterType, Map<String, ObjectClusterImpl>>> clusterMap = new IdentityHashMap<>();
 	private HeapDumpReader reader;
 	private StandardStatsCalculator calculator;
 	private ModelLoaderListener loaderListener;
 
 	static {
-		Snapshot.Builder.setObjTableSizePolicy(new Snapshot.ObjTableSizePolicy() {
-
-			@Override
-			public int getInitialObjTableSize(long hprofFileSize) {
-				return (int) (Math.pow(hprofFileSize, 0.93) / 70);
-			}
-		});
+		Snapshot.Builder.setObjTableSizePolicy(hprofFileSize -> (int) (Math.pow(hprofFileSize, 0.93) / 70));
 	}
 
 	public ModelLoader(String fileName, ModelLoaderListener loaderListener) {
@@ -90,20 +84,16 @@ public class ModelLoader implements ProblemRecorder, Runnable {
 	@Override
 	public void run() {
 		ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-		ScheduledFuture<?> progressUpdater = es.scheduleAtFixedRate(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					getLoaderListener().onProgressUpdate(getProgress());
-				} catch (HprofParsingCancelledException e) {
-					// Canceled
-				}
+		ScheduledFuture<?> progressUpdater = es.scheduleAtFixedRate(() -> {
+			try {
+				getLoaderListener().onProgressUpdate(getProgress());
+			} catch (HprofParsingCancelledException e) {
+				// Canceled
 			}
 		}, 100, 100, TimeUnit.MILLISECONDS);
 		Snapshot snapshot = null;
 		try {
-			ReadBuffer.Factory factory = new ReadBuffer.CachedReadBufferFactory(fileName, calculateReadbufMemory());
+			ReadBuffer.Factory factory = new ReadBuffer.CachedReadBufferFactory(fileName, calculateReadBufMemory());
 			HeapDumpReader reader = HeapDumpReader.createReader(factory, 0, new VerboseOutputCollector());
 			setReader(reader);
 			snapshot = reader.read();
@@ -133,7 +123,7 @@ public class ModelLoader implements ProblemRecorder, Runnable {
 			progressUpdater.cancel(true);
 			es.shutdown();
 		}
-	};
+	}
 
 	public synchronized void cancel() {
 		if (reader != null) {
@@ -221,7 +211,7 @@ public class ModelLoader implements ProblemRecorder, Runnable {
 	}
 
 	private Collection<ReferenceChain> buildModel() {
-		ArrayList<ReferenceChain> sums = new ArrayList<ReferenceChain>();
+		ArrayList<ReferenceChain> sums = new ArrayList<>();
 		Iterator<Entry<RefChainElement, Map<ClusterType, Map<String, ObjectClusterImpl>>>> clusterIterator = clusterMap.entrySet().iterator();
 		while (clusterIterator.hasNext()) {
 			Entry<RefChainElement, Map<ClusterType, Map<String, ObjectClusterImpl>>> e = clusterIterator.next();
@@ -242,16 +232,8 @@ public class ModelLoader implements ProblemRecorder, Runnable {
 	}
 
 	private ObjectClusterImpl getObjectCluster(RefChainElement referrer, ClusterType type, String className, String qualifier) {
-		Map<ClusterType, Map<String, ObjectClusterImpl>> m1 = clusterMap.get(referrer);
-		if (m1 == null) {
-			m1 = new HashMap<ClusterType, Map<String, ObjectClusterImpl>>();
-			clusterMap.put(referrer, m1);
-		}
-		Map<String, ObjectClusterImpl> m2 = m1.get(type);
-		if (m2 == null) {
-			m2 = new HashMap<String, ObjectClusterImpl>();
-			m1.put(type, m2);
-		}
+		Map<ClusterType, Map<String, ObjectClusterImpl>> m1 = clusterMap.computeIfAbsent(referrer, k -> new HashMap<>());
+		Map<String, ObjectClusterImpl> m2 = m1.computeIfAbsent(type, k -> new HashMap<>());
 		String id = StringInterner.internString(className + "|" + qualifier);
 		ObjectClusterImpl p = m2.get(id);
 		if (p == null) {
@@ -280,7 +262,7 @@ public class ModelLoader implements ProblemRecorder, Runnable {
 		this.reader = reader;
 	}
 
-	private static int calculateReadbufMemory() {
+	private static int calculateReadBufMemory() {
 		System.gc();
 		Runtime runtime = Runtime.getRuntime();
 		long availableMemory = runtime.maxMemory() - runtime.totalMemory() + runtime.freeMemory();
