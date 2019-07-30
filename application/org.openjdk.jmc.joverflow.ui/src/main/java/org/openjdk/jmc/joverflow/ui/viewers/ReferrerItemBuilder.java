@@ -45,8 +45,8 @@ import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
  */
 class ReferrerItemBuilder {
 
-	private final Map<String, ReferrerItem> itemsAtBranchingLevel = new IdentityHashMap<String, ReferrerItem>();
-	private List<String> commonChain = new ArrayList<String>();
+	private final Map<String, ReferrerItem> itemsAtBranchingLevel = new IdentityHashMap<>();
+	private List<String> commonChain = new ArrayList<>();
 	private int commonCount;
 	private long commonOverhead;
 	private long commonMemory;
@@ -104,7 +104,7 @@ class ReferrerItemBuilder {
 	}
 
 	public List<ReferrerItem> buildReferrerList() {
-		List<ReferrerItem> items = new ArrayList<ReferrerItem>();
+		List<ReferrerItem> items = new ArrayList<>();
 		int commonDepth = 0;
 		for (String r : commonChain) {
 			items.add(new ReferrerItem(commonChain.subList(0, commonDepth), r, commonMemory, commonOverhead, commonCount, false));

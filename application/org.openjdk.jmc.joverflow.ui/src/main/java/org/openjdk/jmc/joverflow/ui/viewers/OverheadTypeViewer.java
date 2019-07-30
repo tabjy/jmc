@@ -70,6 +70,7 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
         mTableViewer.setInput(mItems);
     }
 
+    @Override
     public void resetItems() {
         for (MemoryStatisticsItem item : mItems) {
             item.reset();

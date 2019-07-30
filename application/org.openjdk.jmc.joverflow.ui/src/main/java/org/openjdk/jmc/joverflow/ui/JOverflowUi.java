@@ -131,7 +131,7 @@ public class JOverflowUi extends Composite {
     }
 
     public void reset() {
-        // TODO: reset all tables
+        // TODO: reset all viewers
         mOverheadTypeViewer.reset();
     }
 }
