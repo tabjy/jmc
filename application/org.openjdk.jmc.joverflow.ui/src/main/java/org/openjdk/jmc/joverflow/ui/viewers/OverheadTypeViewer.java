@@ -81,11 +81,8 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
 
     public ClusterType getCurrentType() {
         ISelection selection = getSelection();
-        if (selection.isEmpty()) {
-            return null;
-        }
-        if (!(selection instanceof StructuredSelection)) {
-            return null;
+        if (selection.isEmpty() || !(selection instanceof StructuredSelection)) {
+            return ClusterType.ALL_OBJECTS;
         }
         ClusterType type = (ClusterType) ((MemoryStatisticsItem) ((StructuredSelection) getSelection()).getFirstElement()).getId();
         if (type == null) {

@@ -7,6 +7,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -17,7 +18,7 @@ public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends
     MemoryStatisticsTableViewer(Composite parent, int style) {
         super(parent, style);
 
-        setContentProvider(ArrayContentProvider.getInstance());
+        setContentProvider(MemoryStatisticsItemContentProvider.getInstance());
 
         // TODO: change to a conversion method that's not so primitive
         createTableColumnViewer("Object Selection",
@@ -150,6 +151,28 @@ public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends
         }
 
         abstract int doCompare(Object e1, Object e2);
+    }
+
+    static class MemoryStatisticsItemContentProvider extends ArrayContentProvider {
+
+        private static MemoryStatisticsItemContentProvider instance;
+
+        public static MemoryStatisticsItemContentProvider getInstance() {
+            synchronized(MemoryStatisticsItemContentProvider.class) {
+                if (instance == null) {
+                    instance = new MemoryStatisticsItemContentProvider();
+                }
+                return instance;
+            }
+        }
+
+        @Override
+        public Object[] getElements(Object inputElement) {
+            return Arrays
+                    .stream(super.getElements(inputElement))
+                    .filter(x -> ((MemoryStatisticsItem) x).getSize() > 0)
+                    .toArray();
+        }
     }
 }
 

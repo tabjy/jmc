@@ -104,7 +104,6 @@ public class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
                 }
             }
 
-
             return new Object[]{items.get(0)};
         }
 
