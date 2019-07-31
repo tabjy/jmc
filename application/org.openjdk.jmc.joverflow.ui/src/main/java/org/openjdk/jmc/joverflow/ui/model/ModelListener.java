@@ -53,6 +53,4 @@ public interface ModelListener {
 	 * model
 	 */
 	void allIncluded();
-
-	void resetItems();
 }

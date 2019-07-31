@@ -1,13 +1,16 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
-import org.eclipse.jface.viewers.ColumnLabelProvider;
-import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.TreeViewerColumn;
+import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Tree;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -18,15 +21,15 @@ public class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
     public ReferrerTreeViewer(Composite parent, int style) {
         super(parent, style);
 
-        setContentProvider(ReferrerItemContentProvider.getInstance());
+        setContentProvider(new ReferrerItemContentProvider());
 
         createTreeViewerColumn("Referrer",
                 T::getName,
                 (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()));
         createTreeViewerColumn("Memory KB",
                 model -> String.format("%d (%d%%)", model.getMemory() / 1024, model.getMemory() * 100 / mTotalMemory),
-                (lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory())//, // TODO
-//                MemoryStatisticsTableViewer.ColumnViewerComparator.Direction.Desc
+                (lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()),
+                TreeViewerColumnComparator.Direction.Desc
         );
 
         createTreeViewerColumn("Overhead KB",
@@ -41,7 +44,12 @@ public class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
         getTree().setHeaderVisible(true);
     }
 
+
     private void createTreeViewerColumn(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator) {
+        createTreeViewerColumn(label, labelProvider, comparator, null);
+    }
+
+    private void createTreeViewerColumn(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator, TreeViewerColumnComparator.Direction sortDirection) {
         TreeViewerColumn column = new TreeViewerColumn(this, SWT.NONE);
         column.getColumn().setWidth(200);
         column.getColumn().setText(label);
@@ -51,24 +59,26 @@ public class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
             @SuppressWarnings("unchecked")
             @Override
             public String getText(Object element) {
-                List<ReferrerItem> items = (List<ReferrerItem>) element;
-                return labelProvider.apply((T) items.get(0));
+                return labelProvider.apply((T) element);
             }
         });
+
+        TreeViewerColumnComparator cmp = new TreeViewerColumnComparator(this, column) {
+            @SuppressWarnings("unchecked")
+            @Override
+            protected int doCompare(Object e1, Object e2) {
+                return comparator.apply((T) e1, (T) e2);
+            }
+        };
+
+        if (sortDirection != null) {
+            cmp.setSorter(sortDirection);
+        }
     }
 
     private static class ReferrerItemContentProvider implements ITreeContentProvider {
 
-        private static ReferrerItemContentProvider instance;
-
-        public static ReferrerItemContentProvider getInstance() {
-            synchronized (ReferrerItemContentProvider.class) {
-                if (instance == null) {
-                    instance = new ReferrerItemContentProvider();
-                }
-                return instance;
-            }
-        }
+        private Map<ReferrerItem, List<ReferrerItem>> parentToChildren = new HashMap<>();
 
         @SuppressWarnings("unchecked")
         @Override
@@ -79,27 +89,33 @@ public class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
             }
 
             if (items.get(0).isBranch()) {
-                Object[] res = new Object[items.size()];
-                for (int i = 0; i < items.size(); i++) {
-                    res[i] = items.subList(i, i + 1);
-                }
-
-                return res;
+                return items.toArray();
             }
 
-            return new Object[]{items};
+            ReferrerItem parent = items.get(0);
+
+            for (int i = 1; i < items.size(); i++) {
+                ReferrerItem item = items.get(i);
+                if (!item.isBranch()) {
+                    parentToChildren.putIfAbsent(parent, new ArrayList<>());
+                    parentToChildren.get(parent).add(item);
+
+                    parent = item;
+                }
+            }
+
+
+            return new Object[]{items.get(0)};
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public Object[] getChildren(Object parentElement) {
-            List<ReferrerItem> items = (List<ReferrerItem>) parentElement;
-            ReferrerItem item = items.get(0);
+            ReferrerItem item = (ReferrerItem) parentElement;
             if (item.isBranch()) {
                 return new Object[0];
             }
 
-            return new Object[]{items.subList(1, items.size())};
+            return parentToChildren.get(item).toArray();
         }
 
         @Override
@@ -110,9 +126,87 @@ public class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
         @SuppressWarnings("unchecked")
         @Override
         public boolean hasChildren(Object element) {
-            List<ReferrerItem> items = (List<ReferrerItem>) element;
-            return !items.get(0).isBranch();
+            if (((ReferrerItem) element).isBranch()) {
+                return false;
+            }
+
+            return parentToChildren.get(element) != null;
         }
     }
-    // TODO
+
+    static abstract class TreeViewerColumnComparator extends ViewerComparator {
+        public enum Direction {
+            Asc,
+            Desc
+        }
+
+        private Direction direction = null;
+        private TreeViewerColumn column;
+        private ColumnViewer viewer;
+
+        public TreeViewerColumnComparator(ColumnViewer viewer, TreeViewerColumn column) {
+            this.column = column;
+            this.viewer = viewer;
+
+            TreeViewerColumnComparator that = this;
+
+            this.column.getColumn().addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    if (viewer.getComparator() == null) {
+                        that.setSorter(Direction.Asc);
+                        return;
+                    }
+
+                    if (viewer.getComparator() != that) {
+                        that.setSorter(Direction.Asc);
+                        return;
+                    }
+
+                    switch (that.direction) {
+                        case Asc:
+                            that.setSorter(Direction.Desc);
+                            break;
+                        case Desc:
+                            that.setSorter(null);
+                            break;
+                    }
+                }
+            });
+        }
+
+        void setSorter(Direction direction) {
+            this.direction = direction;
+
+            Tree columnParent = column.getColumn().getParent();
+            if (direction == null) {
+                columnParent.setSortColumn(null);
+                columnParent.setSortDirection(SWT.NONE);
+                viewer.setComparator(null);
+                return;
+            }
+
+            columnParent.setSortColumn(column.getColumn());
+            columnParent.setSortDirection(direction == Direction.Asc ? SWT.UP : SWT.DOWN);
+
+            if (viewer.getComparator() == this) {
+                viewer.refresh();
+            } else {
+                viewer.setComparator(this);
+            }
+        }
+
+        @Override
+        public int compare(Viewer viewer, Object e1, Object e2) {
+            int multiplier = 0;
+            if (direction == Direction.Asc) {
+                multiplier = 1;
+            } else if (direction == Direction.Desc) {
+                multiplier = -1;
+            }
+            return multiplier * doCompare(e1, e2);
+        }
+
+        abstract int doCompare(Object e1, Object e2);
+    }
 }

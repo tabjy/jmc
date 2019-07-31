@@ -27,7 +27,7 @@ public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends
         createTableColumnViewer("Memory KB",
                 model -> String.format("%d (%d%%)", model.getMemory() / 1024, model.getMemory() * 100 / mTotalMemory),
                 (lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()),
-                ColumnViewerComparator.Direction.Desc);
+                TableViewerColumnComparator.Direction.Desc);
 
         createTableColumnViewer("Overhead KB",
                 model -> String.format("%d (%d%%)", model.getOverhead() / 1024, model.getOverhead() * 100 / mTotalMemory),
@@ -45,7 +45,7 @@ public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends
         createTableColumnViewer(label, labelProvider, comparator, null);
     }
 
-    private void createTableColumnViewer(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator, ColumnViewerComparator.Direction sortDirection) {
+    private void createTableColumnViewer(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator, TableViewerColumnComparator.Direction sortDirection) {
         TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
         column.getColumn().setWidth(200);
         column.getColumn().setText(label);
@@ -59,7 +59,7 @@ public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends
             }
         });
 
-        ColumnViewerComparator cmp = new ColumnViewerComparator(this, column) {
+        TableViewerColumnComparator cmp = new TableViewerColumnComparator(this, column) {
         	@SuppressWarnings("unchecked")
         	@Override
             protected int doCompare(Object e1, Object e2) {
@@ -76,7 +76,7 @@ public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends
         mTotalMemory = memory;
     }
 
-    static abstract class ColumnViewerComparator extends ViewerComparator {
+    static abstract class TableViewerColumnComparator extends ViewerComparator {
         public enum Direction {
             Asc,
             Desc
@@ -86,11 +86,11 @@ public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends
         private TableViewerColumn column;
         private ColumnViewer viewer;
 
-        public ColumnViewerComparator(ColumnViewer viewer, TableViewerColumn column) {
+        public TableViewerColumnComparator(ColumnViewer viewer, TableViewerColumn column) {
             this.column = column;
             this.viewer = viewer;
 
-            ColumnViewerComparator that = this;
+            TableViewerColumnComparator that = this;
 
             this.column.getColumn().addSelectionListener(new SelectionAdapter() {
                 @Override

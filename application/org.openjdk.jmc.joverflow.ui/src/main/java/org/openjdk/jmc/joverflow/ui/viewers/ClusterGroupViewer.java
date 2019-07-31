@@ -64,12 +64,7 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
     public void allIncluded() {
 
     }
-
-    @Override
-    public void resetItems() {
-
-    }
-
+    
     public void setQualifierName(String qualifierName) {
         mQualifierName = qualifierName;
         mTitle.setText(mQualifierName);

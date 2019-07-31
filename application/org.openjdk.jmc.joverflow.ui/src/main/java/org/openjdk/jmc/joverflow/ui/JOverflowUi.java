@@ -1,6 +1,5 @@
 package org.openjdk.jmc.joverflow.ui;
 
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
@@ -25,6 +24,8 @@ public class JOverflowUi extends Composite {
     private final ClusterGroupViewer mClusterGroupViewer; // left-bottom viewer
     private final ReferrerViewer mReferrerViewer; // right-top viewer
     private final AncestorViewer mAncestorViewer; // right-bottom viewer
+
+    private boolean mUpdatingModel;
 
     public JOverflowUi(Composite parent, int style) {
         super(parent, style);
@@ -61,6 +62,7 @@ public class JOverflowUi extends Composite {
                 topRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mReferrerViewer = new ReferrerViewer(topRightContainer, SWT.BORDER | SWT.FULL_SELECTION);
+                mReferrerViewer.addSelectionChangedListener((event) -> updateModel());
             }
 
             // AncestorViewer
@@ -92,10 +94,13 @@ public class JOverflowUi extends Composite {
     }
 
     private void updateModel() {
-        ClusterType currentType = mOverheadTypeViewer.getCurrentType();
+        if (mUpdatingModel) {
+            return;
+        }
 
-        // reset viewers
-        mOverheadTypeViewer.resetItems();
+        mUpdatingModel = true;
+
+        ClusterType currentType = mOverheadTypeViewer.getCurrentType();
 
         mClusterGroupViewer.setQualifierName(currentType == ClusterType.DUPLICATE_STRING || currentType == ClusterType.DUPLICATE_ARRAY ? "Duplicate" : "Class");
         // Loop all reference chains
@@ -103,7 +108,7 @@ public class JOverflowUi extends Composite {
             RefChainElement rce = chain.getReferenceChain();
             // Check filters for reference chains
 //            if (mReferrerViewer.getFilter().call(rce) && checkFilter(mAncestorViewer.getFilters(), rce)) {
-            if (true) {
+            if (mReferrerViewer.getFilter().test(rce)) {
                 // Loop all object clusters
                 for (ObjectCluster oc : chain) {
                     // Check filters for object clusters
@@ -121,6 +126,7 @@ public class JOverflowUi extends Composite {
                 }
             }
         }
+
         // Notify all that update is done
         mReferrerViewer.allIncluded();
         mClusterGroupViewer.allIncluded();
@@ -128,10 +134,13 @@ public class JOverflowUi extends Composite {
 
         mOverheadTypeViewer.setTotalMemory(mTotalMemory);
         mOverheadTypeViewer.allIncluded();
+
+        mUpdatingModel = false;
     }
 
     public void reset() {
         // TODO: reset all viewers
         mOverheadTypeViewer.reset();
+        mReferrerViewer.reset();
     }
 }

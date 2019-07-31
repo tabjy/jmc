@@ -59,9 +59,4 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
     public void allIncluded() {
 
     }
-
-    @Override
-    public void resetItems() {
-
-    }
 }

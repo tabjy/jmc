@@ -3,6 +3,7 @@ package org.openjdk.jmc.joverflow.ui.viewers;
 import org.eclipse.jface.viewers.ContentViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -11,12 +12,13 @@ import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 
 import java.util.ArrayList;
+import java.util.function.Predicate;
 
 public class ReferrerViewer extends ContentViewer implements ModelListener {
 
-    //    private final ReferrerTreeViewer ui;
     private ReferrerTreeViewer<ReferrerItem> mTreeViewer;
-    private ReferrerItemBuilder builder;
+    private ReferrerItemBuilder mItemBuilder;
+    private Predicate<RefChainElement> mFilter = refChainElement -> true;
 
     public ReferrerViewer(Composite parent, int style) {
         mTreeViewer = new ReferrerTreeViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION);
@@ -24,34 +26,26 @@ public class ReferrerViewer extends ContentViewer implements ModelListener {
 
     @Override
     public void allIncluded() {
-        if (builder == null) {
-//            ui.getItems().clear();
-//            TODO
+        if (mItemBuilder == null) {
             mTreeViewer.setInput(new ArrayList<ReferrerItem>());
         } else {
-//            ui.set(builder.buildReferrerList());
-            mTreeViewer.setInput(builder.buildReferrerList());
-            builder = null;
+            mTreeViewer.setInput(mItemBuilder.buildReferrerList());
+            mTreeViewer.expandAll();
+            mItemBuilder = null;
         }
-    }
-
-    @Override
-    public void resetItems() {
-        // TODO
     }
 
     @Override
     public void include(ObjectCluster oc, RefChainElement ref) {
-        if (builder == null) {
-            builder = new ReferrerItemBuilder(oc, ref);
+        if (mItemBuilder == null) {
+            mItemBuilder = new ReferrerItemBuilder(oc, ref);
         } else {
-            builder.addCluster(oc, ref);
+            mItemBuilder.addCluster(oc, ref);
         }
     }
 
     public void reset() {
-//        ui.selectedItem = null;
-        // TODO
+        mFilter = refChainElement -> true;
     }
 
     @Override
@@ -82,5 +76,16 @@ public class ReferrerViewer extends ContentViewer implements ModelListener {
     @Override
     public void setSelection(ISelection selection, boolean reveal) {
         mTreeViewer.setSelection(selection, reveal);
+    }
+
+    public Predicate<RefChainElement> getFilter() {
+        ISelection selection = getSelection();
+        if (selection.isEmpty() || !(selection instanceof StructuredSelection)) {
+            return mFilter;
+        }
+
+        ReferrerItem item = (ReferrerItem) ((StructuredSelection) getSelection()).getFirstElement();
+        mFilter = item::check;
+        return mFilter;
     }
 }

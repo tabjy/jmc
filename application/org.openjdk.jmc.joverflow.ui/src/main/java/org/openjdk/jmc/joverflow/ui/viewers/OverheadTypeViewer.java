@@ -14,6 +14,7 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
 
     private final MemoryStatisticsTableViewer<MemoryStatisticsItem> mTableViewer;
     private MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
+    private boolean mAllIncluded = false;
 
     public OverheadTypeViewer(Composite parent, int style) {
         for (ClusterType t : ClusterType.values()) {
@@ -60,6 +61,13 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
 
     @Override
     public void include(ObjectCluster oc, RefChainElement ref) {
+        if (mAllIncluded) {
+            for (MemoryStatisticsItem item : mItems) {
+                item.reset();
+            }
+            mAllIncluded = false;
+        }
+
         if (oc.getType() != null) {
             mItems[oc.getType().ordinal()].addObjectCluster(oc);
         }
@@ -68,13 +76,7 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
     @Override
     public void allIncluded() {
         mTableViewer.setInput(mItems);
-    }
-
-    @Override
-    public void resetItems() {
-        for (MemoryStatisticsItem item : mItems) {
-            item.reset();
-        }
+        mAllIncluded = true;
     }
 
     public ClusterType getCurrentType() {
@@ -85,7 +87,12 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
         if (!(selection instanceof StructuredSelection)) {
             return null;
         }
-        return (ClusterType) ((MemoryStatisticsItem) ((StructuredSelection) getSelection()).getFirstElement()).getId();
+        ClusterType type = (ClusterType) ((MemoryStatisticsItem) ((StructuredSelection) getSelection()).getFirstElement()).getId();
+        if (type == null) {
+            return ClusterType.ALL_OBJECTS;
+        }
+
+        return type;
     }
 
     public void setTotalMemory(long memory) {
