@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * 
+ *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * The contents of this file are subject to the terms of either the Universal Permissive License
@@ -10,17 +10,17 @@
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted
  * provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions
  * and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of
  * conditions and the following disclaimer in the documentation and/or other materials provided with
  * the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its contributors may be used to
  * endorse or promote products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
@@ -30,78 +30,67 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openjdk.jmc.joverflow.ui.viewers;
-
-import org.openjdk.jmc.joverflow.heap.model.JavaThing;
-import org.openjdk.jmc.joverflow.ui.tabletree.TreeItem;
+package org.openjdk.jmc.joverflow.ui.model;
 
 /**
- * A {@code TreeItem} for a {@code JavaThing}
+ * Class holding an aggregate of mOverhead/mMemory/mSize for a number of {@code ObjectCluster}. The group is identified by
+ * {@code id}
  */
-class JavaThingItem implements TreeItem {
+public class MemoryStatisticsItem {
+    private final Object id;
+    private Integer index;
 
-	private Iterable<JavaThingItem> children;
-	private boolean expanded;
-	private final int level;
-	private final JavaThing content;
-	private final String name;
-	private final String value;
-	private final String size;
+    private long mOverhead;
+    private long mMemory;
+    private int mSize;
 
-	public JavaThingItem(int level, String name, JavaThing content) {
-		this(level, name, content == null ? "null" : content.valueAsString(), content == null ? 0 : content.getSize(), content);
-	}
+    public MemoryStatisticsItem(Object id, long memory, long ovhd, int size) {
+        this.id = id;
+    }
 
-	public JavaThingItem(int level, String name, String value, int size, JavaThing content) {
-		this.level = level;
-		this.content = content;
-		this.name = String.valueOf(name);
-		this.value = String.valueOf(value);
-		this.size = Integer.toString(size);
-	}
+    public long getOverhead() {
+        return mOverhead;
+    }
 
-	String getName() {
-		return name;
-	}
+    public long getMemory() {
+        return mMemory;
+    }
 
-	String getValue() {
-		return value;
-	}
+    public int getSize() {
+        return mSize;
+    }
 
-	String getSize() {
-		return size;
-	}
+    public void reset() {
+        mOverhead = 0;
+        mMemory = 0;
+        mSize = 0;
+    }
 
-	public Iterable<JavaThingItem> getChildItems() {
-		return children;
-	}
+    public String getName() {
+        return id == null ? "N/A" : id.toString();
+    }
 
-	public void setChildItems(Iterable<JavaThingItem> children) {
-		this.children = children;
-	}
+    public void addObjectCluster(ObjectCluster oc) {
+        mOverhead += oc.getOverhead();
+        mMemory += oc.getMemory();
+        mSize += oc.getObjectCount();
+    }
 
-	@Override
-	public void setExpended(boolean expanded) {
-		this.expanded = expanded;
-		if (!expanded && children != null) {
-			// Collapse children with parent
-			for (TreeItem c : children) {
-				c.setExpended(false);
-			}
-		}
-	}
+    public void setIndex(int index) {
+        this.index = index;
+    }
 
-	@Override
-	public boolean isExpanded() {
-		return expanded;
-	}
+    public Integer getIndex() {
+        return index;
+    }
 
-	@Override
-	public int getLevel() {
-		return level;
-	}
+    public Object getId() {
+        return id;
+    }
 
-	public JavaThing getContent() {
-		return content;
-	}
+    @Override
+    public String toString() {
+        return getName();
+    }
+
 }

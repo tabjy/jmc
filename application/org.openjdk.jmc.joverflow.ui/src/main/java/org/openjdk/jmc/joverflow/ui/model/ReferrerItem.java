@@ -30,7 +30,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openjdk.jmc.joverflow.ui.viewers;
+package org.openjdk.jmc.joverflow.ui.model;
 
 import java.util.List;
 
@@ -41,7 +41,7 @@ import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
  * Aggregates a number of referrers with a the same initial referrer chain Holds overhead/memory/size for the
  * {@code ObjectCluster} referred to by these referrers.
  */
-class ReferrerItem {
+public class ReferrerItem {
 
 	private long ovhd;
 	private long memory;
@@ -50,7 +50,7 @@ class ReferrerItem {
 	private final boolean isBranch;
 	private final List<String> commonReferrers;
 
-	public ReferrerItem(List<String> commonReferrers, String referrer, long memory, long overhead, int objectCount, boolean isBranch) {
+	ReferrerItem(List<String> commonReferrers, String referrer, long memory, long overhead, int objectCount, boolean isBranch) {
 		this.isBranch = isBranch;
 		this.referrer = referrer;
 		this.commonReferrers = commonReferrers;
@@ -59,17 +59,17 @@ class ReferrerItem {
 		size = objectCount;
 	}
 
-	public ReferrerItem(List<String> parentReferrers, String referrer) {
+	ReferrerItem(List<String> parentReferrers, String referrer) {
 		this(parentReferrers, referrer, 0, 0, 0, true);
 	}
 
-	public void addObjectCluster(ObjectCluster oc) {
+	void addObjectCluster(ObjectCluster oc) {
 		ovhd += oc.getOverhead();
 		memory += oc.getMemory();
 		size += oc.getObjectCount();
 	}
 
-	boolean check(RefChainElement ref) {
+	public boolean check(RefChainElement ref) {
 		for (String parentRefName : commonReferrers) {
 			if (ref == null || !parentRefName.equals(ref.toString())) {
 				return false;

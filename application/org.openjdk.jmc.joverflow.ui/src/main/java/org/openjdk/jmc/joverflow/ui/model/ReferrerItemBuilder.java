@@ -30,7 +30,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openjdk.jmc.joverflow.ui.viewers;
+package org.openjdk.jmc.joverflow.ui.model;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -38,12 +38,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.openjdk.jmc.joverflow.support.RefChainElement;
-import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 
 /**
  * Builder used to construct a list of {@code ReferrerItem} that represents a tree with only a single branching level
  */
-class ReferrerItemBuilder {
+public class ReferrerItemBuilder {
 
 	private final Map<String, ReferrerItem> itemsAtBranchingLevel = new IdentityHashMap<>();
 	private List<String> commonChain = new ArrayList<>();

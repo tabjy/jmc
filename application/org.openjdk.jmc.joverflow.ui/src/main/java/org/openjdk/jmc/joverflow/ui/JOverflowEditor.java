@@ -71,10 +71,8 @@ public class JOverflowEditor extends EditorPart {
 
     private Composite mParentComposite;
     private ProgressIndicator mProgressIndicator;
-    private Form mForm;
     private JOverflowUi mJOverflowUi;
 
-    private IPathEditorInput mInput;
     private ModelLoader mLoader;
     private Snapshot mSnapshot;
     private Collection<ReferenceChain> mModel;
@@ -100,7 +98,6 @@ public class JOverflowEditor extends EditorPart {
     }
 
     private void loadModel(final IPathEditorInput input) {
-        mInput = input;
 
         if (mLoader != null) {
             mLoader.cancel();
@@ -112,7 +109,7 @@ public class JOverflowEditor extends EditorPart {
             mSnapshot = null;
         }
 
-        setPartName(mInput.getName());
+        setPartName(input.getName());
 
         String inputPath = input.getPath().toOSString();
         mLoader = new ModelLoader(inputPath, new ModelLoaderListener() {
@@ -184,7 +181,7 @@ public class JOverflowEditor extends EditorPart {
     }
 
     private void createJoverflowUi(Composite parent) {
-        mForm = mFormToolkit.createForm(parent);
+        Form mForm = mFormToolkit.createForm(parent);
         mForm.setText("JOverflow");
         mForm.setImage(getTitleImage());
         mFormToolkit.decorateFormHeading(mForm);

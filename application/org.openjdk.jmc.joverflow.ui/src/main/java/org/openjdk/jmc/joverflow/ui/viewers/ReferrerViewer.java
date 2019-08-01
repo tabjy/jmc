@@ -9,6 +9,8 @@ import org.eclipse.swt.widgets.Control;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
+import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
+import org.openjdk.jmc.joverflow.ui.model.ReferrerItemBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;

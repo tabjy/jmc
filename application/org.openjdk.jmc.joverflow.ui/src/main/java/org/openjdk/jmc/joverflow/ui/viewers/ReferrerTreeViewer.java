@@ -6,6 +6,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
+import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,11 +15,11 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
+class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
 
     private long mTotalMemory = 100000; // TODO
 
-    public ReferrerTreeViewer(Composite parent, int style) {
+    ReferrerTreeViewer(Composite parent, int style) {
         super(parent, style);
 
         setContentProvider(new ReferrerItemContentProvider());
@@ -122,7 +123,6 @@ public class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
             return null;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public boolean hasChildren(Object element) {
             if (((ReferrerItem) element).isBranch()) {
@@ -143,7 +143,7 @@ public class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
         private TreeViewerColumn column;
         private ColumnViewer viewer;
 
-        public TreeViewerColumnComparator(ColumnViewer viewer, TreeViewerColumn column) {
+        TreeViewerColumnComparator(ColumnViewer viewer, TreeViewerColumn column) {
             this.column = column;
             this.viewer = viewer;
 

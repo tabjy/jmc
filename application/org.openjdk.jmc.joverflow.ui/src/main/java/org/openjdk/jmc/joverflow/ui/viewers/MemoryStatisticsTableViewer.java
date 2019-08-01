@@ -6,12 +6,13 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
+import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableViewer {
+class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableViewer {
 
     private long mTotalMemory;
 
@@ -73,7 +74,7 @@ public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends
         }
     }
 
-    public void setTotalMemory(long memory) {
+    void setTotalMemory(long memory) {
         mTotalMemory = memory;
     }
 
@@ -87,7 +88,7 @@ public class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends
         private TableViewerColumn column;
         private ColumnViewer viewer;
 
-        public TableViewerColumnComparator(ColumnViewer viewer, TableViewerColumn column) {
+        TableViewerColumnComparator(ColumnViewer viewer, TableViewerColumn column) {
             this.column = column;
             this.viewer = viewer;
 
