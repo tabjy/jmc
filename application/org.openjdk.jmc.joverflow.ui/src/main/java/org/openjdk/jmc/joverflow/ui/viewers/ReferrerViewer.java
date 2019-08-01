@@ -135,4 +135,8 @@ public class ReferrerViewer extends ContentViewer implements ModelListener {
         ReferrerItem item = (ReferrerItem) ((StructuredSelection) getSelection()).getFirstElement();
         return item::check;
     }
+    
+    public void setTotalMemory(long memory) {
+    	mTreeViewer.setTotalMemory(memory);
+    }
 }

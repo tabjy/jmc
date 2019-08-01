@@ -103,7 +103,7 @@ public class JOverflowUi extends Composite {
 
         ClusterType currentType = mOverheadTypeViewer.getCurrentType();
 
-        mClusterGroupViewer.setQualifierName(currentType == ClusterType.DUPLICATE_STRING || currentType == ClusterType.DUPLICATE_ARRAY ? "Duplicate" : "Class");
+        mClusterGroupViewer.setQualifierName(currentType == ClusterType.DUPLICATE_STRING || currentType == ClusterType.DUPLICATE_ARRAY ? "Duplicate" : null);
         // Loop all reference chains
         for (ReferenceChain chain : mModel) {
             RefChainElement rce = chain.getReferenceChain();
@@ -113,8 +113,7 @@ public class JOverflowUi extends Composite {
                 // Loop all object clusters
                 for (ObjectCluster oc : chain) {
                     // Check filters for object clusters
-//                    if (checkFilter(clusterGroupViewer.getFilters(), oc)) {
-                    if (true) {
+                    if (mClusterGroupViewer.getFilter().test(oc)) {
                         // Add object cluster to type-viewer regardless of type
                         mOverheadTypeViewer.include(oc, rce);
                         // Add type object cluster matches current type and add to all other viewers
@@ -129,17 +128,20 @@ public class JOverflowUi extends Composite {
         }
 
         // Notify all that update is done
+        mOverheadTypeViewer.setTotalMemory(mTotalMemory);
+        mReferrerViewer.setTotalMemory(mTotalMemory);
+        mClusterGroupViewer.setTotalMemory(mTotalMemory);
+//        mAncestorViewer.setTotalMemory(mTotalMemory);
+        
         mReferrerViewer.allIncluded();
         mClusterGroupViewer.allIncluded();
         mAncestorViewer.allIncluded();
-
-        mOverheadTypeViewer.setTotalMemory(mTotalMemory);
         mOverheadTypeViewer.allIncluded();
 
         mUpdatingModel = false;
     }
 
-    public void reset() {
+    void reset() {
         // TODO: reset all viewers
         mOverheadTypeViewer.reset();
         mReferrerViewer.reset();

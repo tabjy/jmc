@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
 
-    private long mTotalMemory = 100000; // TODO
+    private long mTotalMemory;
 
     ReferrerTreeViewer(Composite parent, int style) {
         super(parent, style);
@@ -208,4 +208,8 @@ class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
 
         abstract int doCompare(Object e1, Object e2);
     }
+
+	void setTotalMemory(long memory) {
+		mTotalMemory = memory;
+	}
 }

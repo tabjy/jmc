@@ -15,6 +15,7 @@ import java.util.function.Function;
 class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableViewer {
 
     private long mTotalMemory;
+    private TableViewerColumn mPrimaryColumn;
 
     MemoryStatisticsTableViewer(Composite parent, int style) {
         super(parent, style);
@@ -22,7 +23,7 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
         setContentProvider(MemoryStatisticsItemContentProvider.getInstance());
 
         // TODO: change to a conversion method that's not so primitive
-        createTableColumnViewer("Object Selection",
+        mPrimaryColumn = createTableColumnViewer("Name",
                 T::getName,
                 (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()));
 
@@ -43,11 +44,11 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
         getTable().setHeaderVisible(true);
     }
 
-    private void createTableColumnViewer(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator) {
-        createTableColumnViewer(label, labelProvider, comparator, null);
+    private TableViewerColumn createTableColumnViewer(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator) {
+        return createTableColumnViewer(label, labelProvider, comparator, null);
     }
 
-    private void createTableColumnViewer(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator, TableViewerColumnComparator.Direction sortDirection) {
+    private TableViewerColumn createTableColumnViewer(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator, TableViewerColumnComparator.Direction sortDirection) {
         TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
         column.getColumn().setWidth(200);
         column.getColumn().setText(label);
@@ -72,6 +73,8 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
         if (sortDirection != null) {
             cmp.setSorter(sortDirection);
         }
+
+        return column;
     }
 
     void setTotalMemory(long memory) {
@@ -174,6 +177,10 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
                     .filter(x -> ((MemoryStatisticsItem) x).getSize() > 0)
                     .toArray();
         }
+    }
+
+    void setPrimaryColumnText(String text) {
+        mPrimaryColumn.getColumn().setText(text);
     }
 }
 
