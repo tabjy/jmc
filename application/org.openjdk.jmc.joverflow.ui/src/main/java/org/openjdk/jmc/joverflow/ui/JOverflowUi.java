@@ -72,6 +72,7 @@ public class JOverflowUi extends Composite {
                 bottomRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mAncestorViewer = new AncestorViewer(bottomRightContainer, SWT.BORDER | SWT.FULL_SELECTION);
+                mAncestorViewer.addSelectionChangedListener((event) -> updateModel());
             }
             vSashRight.setWeights(new int[]{1, 1});
         }
@@ -132,7 +133,7 @@ public class JOverflowUi extends Composite {
         mOverheadTypeViewer.setTotalMemory(mTotalMemory);
         mReferrerViewer.setTotalMemory(mTotalMemory);
         mClusterGroupViewer.setTotalMemory(mTotalMemory);
-//        mAncestorViewer.setTotalMemory(mTotalMemory);
+        mAncestorViewer.setTotalMemory(mTotalMemory);
         
         mReferrerViewer.allIncluded();
         mClusterGroupViewer.allIncluded();
@@ -146,5 +147,7 @@ public class JOverflowUi extends Composite {
         // TODO: reset all viewers
         mOverheadTypeViewer.reset();
         mReferrerViewer.reset();
+        mClusterGroupViewer.reset();
+        mAncestorViewer.reset();
     }
 }

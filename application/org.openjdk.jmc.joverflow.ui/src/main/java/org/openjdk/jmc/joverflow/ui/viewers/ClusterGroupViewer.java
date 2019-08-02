@@ -26,39 +26,53 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
     private Label mTitle;
     private Button mPieChart;
     private Group mFilterContainer;
+    private final MemoryStatisticsTableViewer<MemoryStatisticsItem> mTableViewer;
 
     private String mQualifierName;
     private final Map<Object, MemoryStatisticsItem> items = new HashMap<>();
-    private final MemoryStatisticsTableViewer<MemoryStatisticsItem> mTableViewer;
-    private List<Filter> mFilters = new ArrayList<>();
+    private List<Predicate<ObjectCluster>> mFilters = new ArrayList<>();
 
     private boolean mAllIncluded = false;
 
     public ClusterGroupViewer(Composite parent, int style) {
         SashForm bottomLeftSash = new SashForm(parent, SWT.NONE);
-        Group classPieChartContainer = new Group(bottomLeftSash, SWT.NONE);
-        classPieChartContainer.setLayout(new FillLayout(SWT.VERTICAL));
+        Group pieChartContainer = new Group(bottomLeftSash, SWT.NONE);
+        pieChartContainer.setLayout(new FillLayout(SWT.VERTICAL));
 
-        mTitle = new Label(classPieChartContainer, SWT.NONE);
+        mTitle = new Label(pieChartContainer, SWT.NONE);
 
-        mPieChart = new Button(classPieChartContainer, SWT.NONE);
+        mPieChart = new Button(pieChartContainer, SWT.NONE);
         mPieChart.setText("[Pie Chart]");
 
-        mFilterContainer = new Group(classPieChartContainer, SWT.NONE);
+        mFilterContainer = new Group(pieChartContainer, SWT.NONE);
         mFilterContainer.setLayout(new FillLayout(SWT.VERTICAL));
 
         Group classTableContainer = new Group(bottomLeftSash, SWT.NONE);
         classTableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
         mTableViewer = new MemoryStatisticsTableViewer<>(classTableContainer, SWT.BORDER | SWT.FULL_SELECTION);
-
         mTableViewer.addSelectionChangedListener((event) -> {
             if (event.getStructuredSelection().isEmpty()) {
                 return;
             }
             MemoryStatisticsItem item = (MemoryStatisticsItem) event.getStructuredSelection().getFirstElement();
-            Filter filter = new Filter(mQualifierName, item.getId().toString(), false);
+
+            String qualifierName = mQualifierName;
+            String itemName = item.getId().toString();
+            boolean excluded = false;
+            Predicate<ObjectCluster> filter = (oc) -> {
+                if (qualifierName == null) {
+                    return itemName.equals(oc.getClassName()) ^ excluded;
+                }
+
+                if (oc.getQualifier() == null) {
+                    return true;
+                }
+
+                return itemName.equals(oc.getQualifier()) ^ excluded;
+            };
             mFilters.add(filter);
+
             Button button = new Button(mFilterContainer, SWT.NONE);
             button.setText((mQualifierName == null ? "Class" : mQualifierName) + " = " + item.getId().toString());
             button.addMouseListener(new MouseListener() {
@@ -154,37 +168,19 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
         mTableViewer.setTotalMemory(memory);
     }
 
-    class Filter implements Predicate<ObjectCluster> {
-        private boolean mNegated;
-        private String mName;
-        private String mItem;
-
-        Filter (String name, String item, boolean exclude) {
-            mName = name;
-            mNegated = exclude;
-            mItem = item;
-        }
-
-        @Override
-        public boolean test(ObjectCluster oc) {
-            if (mName == null) {
-                return mItem.equals(oc.getClassName()) ^ mNegated;
-            }
-
-            if (oc.getQualifier() == null) {
-                return true;
-            }
-
-            return mItem.equals(oc.getQualifier()) ^ mNegated;
-        }
-    }
-
     public Predicate<ObjectCluster> getFilter() {
         Predicate<ObjectCluster> res = oc -> true;
-        for (Filter filter : mFilters) {
+        for (Predicate<ObjectCluster> filter : mFilters) {
             res = res.and(filter);
         }
 
         return res;
+    }
+
+    public void reset() {
+        mFilters.clear();
+        for (Control filter : mFilterContainer.getChildren()) {
+            filter.dispose();
+        }
     }
 }
