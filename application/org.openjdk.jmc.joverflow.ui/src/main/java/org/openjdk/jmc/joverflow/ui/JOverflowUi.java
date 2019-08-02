@@ -50,6 +50,7 @@ public class JOverflowUi extends Composite {
                 bottomLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mClusterGroupViewer = new ClusterGroupViewer(bottomLeftContainer, SWT.BORDER | SWT.FULL_SELECTION);
+                mClusterGroupViewer.addSelectionChangedListener((event) -> updateModel());
             }
             vSashLeft.setWeights(new int[]{1, 1});
         }

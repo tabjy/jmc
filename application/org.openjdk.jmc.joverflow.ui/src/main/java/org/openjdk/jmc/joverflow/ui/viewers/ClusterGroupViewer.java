@@ -2,6 +2,8 @@ package org.openjdk.jmc.joverflow.ui.viewers;
 
 import org.eclipse.jface.viewers.ContentViewer;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.MouseEvent;
@@ -69,6 +71,11 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
                 public void mouseDown(MouseEvent e) {
                     mFilters.remove(filter);
                     button.dispose();
+
+                    // TODO: investigate why layout is not auto updated
+                    mFilterContainer.layout(true, true);
+                    mTableViewer.getTable().setFocus();
+                    mTableViewer.setSelection(StructuredSelection.EMPTY, true);
                 }
 
                 @Override
@@ -77,19 +84,29 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
                 }
             });
 
-            // HACK
+            // TODO: investigate why layout is not auto updated
             mFilterContainer.layout(true, true);
         });
     }
-
+    
     @Override
     public Control getControl() {
         return mTableViewer.getControl();
     }
 
     @Override
+    public void addSelectionChangedListener(ISelectionChangedListener listener) {
+        mTableViewer.addSelectionChangedListener(listener);
+    }
+
+    @Override
     public ISelection getSelection() {
         return null;
+    }
+
+    @Override
+    public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+        mTableViewer.removeSelectionChangedListener(listener);
     }
 
     @Override
@@ -99,7 +116,7 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
 
     @Override
     public void setSelection(ISelection selection, boolean reveal) {
-    	
+        mTableViewer.setSelection(selection, reveal);
     }
 
     @Override
