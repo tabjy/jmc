@@ -58,9 +58,11 @@ import org.openjdk.jmc.joverflow.ui.model.ReferenceChain;
 import org.openjdk.jmc.ui.misc.CompositeToolkit;
 import org.openjdk.jmc.ui.misc.DialogToolkit;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.List;
 
 public class JOverflowEditor extends EditorPart {
     public static final String EDITOR_ID = "org.openjdk.jmc.joverflow.mJOverflowUi.JOverflowEditor";
@@ -76,6 +78,8 @@ public class JOverflowEditor extends EditorPart {
     private ModelLoader mLoader;
     private Snapshot mSnapshot;
     private Collection<ReferenceChain> mModel;
+    
+    private List<UiLoadedListener> mUiLoadedListeners = new ArrayList<>();
 
     @Override
     public void init(IEditorSite site, IEditorInput input) throws PartInitException {
@@ -203,6 +207,10 @@ public class JOverflowEditor extends EditorPart {
         body.setLayout(new FillLayout());
 
         mJOverflowUi = new JOverflowUi(body, SWT.NONE);
+        
+        for (UiLoadedListener l : mUiLoadedListeners) {
+        	l.uiLoaded(mJOverflowUi);
+        }
     }
 
     @Override
@@ -220,7 +228,17 @@ public class JOverflowEditor extends EditorPart {
 
     @Override
     public void setFocus() {
-        // TODO
+    	if (mJOverflowUi != null) {
+    		mJOverflowUi.setFocus();
+    		return;
+    	}
+    	
+    	if (mProgressIndicator != null) {
+    		mProgressIndicator.setFocus();
+    		return;
+    	}
+    	
+    	mParentComposite.setFocus();
     }
 
     @Override
@@ -241,5 +259,28 @@ public class JOverflowEditor extends EditorPart {
     @Override
     public boolean isSaveAsAllowed() {
         return false;
+    }
+
+    JOverflowUi getJOverflowUi() {
+        return mJOverflowUi;
+    }
+
+    Snapshot getSnapshot() {
+        return mSnapshot;
+    }
+    
+    void addUiLoadedListener(UiLoadedListener listener) {
+    	mUiLoadedListeners.add(listener);
+    	if (mJOverflowUi != null) {
+    		listener.uiLoaded(mJOverflowUi);
+    	}
+    }
+    
+    void removeUiLoadedListener(UiLoadedListener listener) {
+    	mUiLoadedListeners.remove(listener);
+    }
+    
+    interface UiLoadedListener {
+    	void uiLoaded(JOverflowUi ui);
     }
 }

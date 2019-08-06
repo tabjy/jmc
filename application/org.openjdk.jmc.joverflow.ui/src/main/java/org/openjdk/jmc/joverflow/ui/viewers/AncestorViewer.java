@@ -72,7 +72,7 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
                 @Override
                 public void mouseDown(MouseEvent e) {
                     mInput.setText("");
-                    update.notifyListeners(SWT.Selection, new Event());
+                    updatePrefixFilter();
                 }
 
                 @Override
@@ -88,10 +88,7 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
 
                 @Override
                 public void mouseDown(MouseEvent e) {
-                    mPrefix = mInput.getText();
-
-                    mTableViewer.getTable().setFocus();
-                    mTableViewer.setSelection(StructuredSelection.EMPTY, true);
+                    updatePrefixFilter();
                 }
 
                 @Override
@@ -232,6 +229,15 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
         lastRef = null;
     }
 
+    private void updatePrefixFilter() {
+        mPrefix = mInput.getText();
+
+        if (mTableViewer != null) {
+            mTableViewer.getTable().setFocus();
+            mTableViewer.setSelection(StructuredSelection.EMPTY, true);
+        }
+    }
+
     public Predicate<RefChainElement> getFilter() {
         Predicate<RefChainElement> res = rce -> true;
         for (Predicate<RefChainElement> filter : mFilters) {
@@ -251,5 +257,6 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
             filter.dispose();
         }
         mInput.setText("");
+        updatePrefixFilter();
     }
 }

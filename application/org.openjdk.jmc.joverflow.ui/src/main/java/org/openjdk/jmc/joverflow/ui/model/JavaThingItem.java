@@ -38,7 +38,7 @@ import org.openjdk.jmc.joverflow.ui.tabletree.TreeItem;
 /**
  * A {@code TreeItem} for a {@code JavaThing}
  */
-class JavaThingItem implements TreeItem {
+public class JavaThingItem implements TreeItem {
 
 	private Iterable<JavaThingItem> children;
 	private boolean expanded;
@@ -52,7 +52,7 @@ class JavaThingItem implements TreeItem {
 		this(level, name, content == null ? "null" : content.valueAsString(), content == null ? 0 : content.getSize(), content);
 	}
 
-	private JavaThingItem(int level, String name, String value, int size, JavaThing content) {
+	public JavaThingItem(int level, String name, String value, int size, JavaThing content) {
 		this.level = level;
 		this.content = content;
 		this.name = String.valueOf(name);
@@ -60,15 +60,15 @@ class JavaThingItem implements TreeItem {
 		this.size = Integer.toString(size);
 	}
 
-	String getName() {
+	public String getName() {
 		return name;
 	}
 
-	String getValue() {
+	public String getValue() {
 		return value;
 	}
 
-	String getSize() {
+	public String getSize() {
 		return size;
 	}
 

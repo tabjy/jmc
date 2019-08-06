@@ -77,7 +77,7 @@ class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
         }
     }
 
-    private static class ReferrerItemContentProvider implements ITreeContentProvider {
+    private class ReferrerItemContentProvider implements ITreeContentProvider {
 
         private Map<ReferrerItem, List<ReferrerItem>> parentToChildren = new HashMap<>();
 

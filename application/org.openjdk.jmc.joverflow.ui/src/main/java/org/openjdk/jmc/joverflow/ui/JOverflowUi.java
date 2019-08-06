@@ -6,6 +6,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.*;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.ClusterType;
+import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.model.ReferenceChain;
 import org.openjdk.jmc.joverflow.ui.viewers.AncestorViewer;
@@ -13,7 +14,9 @@ import org.openjdk.jmc.joverflow.ui.viewers.ClusterGroupViewer;
 import org.openjdk.jmc.joverflow.ui.viewers.OverheadTypeViewer;
 import org.openjdk.jmc.joverflow.ui.viewers.ReferrerViewer;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class JOverflowUi extends Composite {
 
@@ -24,6 +27,8 @@ public class JOverflowUi extends Composite {
     private final ClusterGroupViewer mClusterGroupViewer; // left-bottom viewer
     private final ReferrerViewer mReferrerViewer; // right-top viewer
     private final AncestorViewer mAncestorViewer; // right-bottom viewer
+
+    private final List<ModelListener> mModelListeners = new ArrayList<>();
 
     private boolean mUpdatingModel;
 
@@ -92,7 +97,6 @@ public class JOverflowUi extends Composite {
         }
         mTotalMemory = heapSize;
         updateModel();
-//      modelUpdater.run();
     }
 
     private void updateModel() {
@@ -110,8 +114,7 @@ public class JOverflowUi extends Composite {
         for (ReferenceChain chain : mModel) {
             RefChainElement rce = chain.getReferenceChain();
             // Check filters for reference chains
-//            if (mReferrerViewer.getFilter().call(rce) && checkFilter(mAncestorViewer.getFilters(), rce)) {
-            if (mReferrerViewer.getFilter().test(rce)) {
+            if (mReferrerViewer.getFilter().test(rce) && mAncestorViewer.getFilter().test(rce)) {
                 // Loop all object clusters
                 for (ObjectCluster oc : chain) {
                     // Check filters for object clusters
@@ -123,6 +126,10 @@ public class JOverflowUi extends Composite {
                             mReferrerViewer.include(oc, chain.getReferenceChain());
                             mClusterGroupViewer.include(oc, chain.getReferenceChain());
                             mAncestorViewer.include(oc, chain.getReferenceChain());
+
+                            for (ModelListener l : mModelListeners) {
+                                l.include(oc, chain.getReferenceChain());
+                            }
                         }
                     }
                 }
@@ -140,14 +147,30 @@ public class JOverflowUi extends Composite {
         mAncestorViewer.allIncluded();
         mOverheadTypeViewer.allIncluded();
 
+        for (ModelListener l : mModelListeners) {
+            l.allIncluded();
+        }
+
         mUpdatingModel = false;
     }
 
     void reset() {
-        // TODO: reset all viewers
+        mUpdatingModel = true;
+
         mOverheadTypeViewer.reset();
         mReferrerViewer.reset();
         mClusterGroupViewer.reset();
         mAncestorViewer.reset();
+
+        mUpdatingModel = false;
+        updateModel();
+    }
+
+    void addModelListener(final ModelListener listener) {
+        mModelListeners.add(listener);
+    }
+
+    void removeModelListener(final ModelListener listener) {
+        mModelListeners.remove(listener);
     }
 }

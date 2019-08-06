@@ -54,30 +54,13 @@ public class InstancesPageBookView extends PageBookView {
 	protected PageRec doCreatePage(IWorkbenchPart part) {
 		if (part instanceof JOverflowEditor) {
 			final JOverflowEditor editor = ((JOverflowEditor) part);
-			/*
-			final JavaThingViewer thingViewer = new JavaThingViewer() {
 
-				@Override
-				protected JavaHeapObject getObjectAtPostion(int globalObjectPos) {
-					return editor.getSnapshot().getObjectAtGlobalIndex(globalObjectPos);
-				}
+			JavaThingPage page = new JavaThingPage(editor);
+			editor.addUiLoadedListener((ui) -> ui.addModelListener(page));
 
-			};
-			thingViewer.getUi().getStylesheets()
-					.add(InstancesPageBookView.class.getResource("grey.css").toExternalForm());
-			AbstractFxPage page = new AbstractFxPage() {
-
-				@Override
-				protected Scene createScene() throws Exception {
-					return new Scene(thingViewer.getUi());
-				}
-
-			};
-			((JOverflowEditor) part).getJOverflowFxUi().addModelListener(thingViewer);
 			initPage(page);
 			page.createControl(getPageBook());
 			return new PageRec(part, page);
-			 */
 		}
 		return null;
 	}
