@@ -1,9 +1,6 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
-import org.eclipse.jface.viewers.ContentViewer;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.MouseEvent;
@@ -23,7 +20,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 public class AncestorViewer extends ContentViewer implements ModelListener {
-    private Button mPieChart;
+    private PieChartViewer mPieChart;
     private Group mFilterContainer;
     private Text mInput;
     private final MemoryStatisticsTableViewer<MemoryStatisticsItem> mTableViewer;
@@ -45,8 +42,21 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
         Label ancestorReferrerLabel = new Label(pieChartContainer, SWT.NONE);
         ancestorReferrerLabel.setText("Ancestor referrer");
 
-        mPieChart = new Button(pieChartContainer, SWT.NONE);
-        mPieChart.setText("[Pie Chart]");
+        mPieChart = new PieChartViewer(pieChartContainer, SWT.BORDER);
+        mPieChart.setContentProvider(ArrayContentProvider.getInstance());
+        mPieChart.setArcAttributeProvider(new ArcAttributeProvider(){
+            @Override
+            public int getWeight(Object element) {
+                return (int) ((MemoryStatisticsItem) element).getMemory();
+            }
+        });
+        mPieChart.getPieChart().setZoomRatio(1.2);
+        mPieChart.setComparator(new ViewerComparator() {
+            @Override
+            public int compare(Viewer viewer, Object e1, Object e2) {
+                return (int) (((MemoryStatisticsItem) e2).getMemory() - ((MemoryStatisticsItem) e1).getMemory());
+            }
+        });
 
         Group prefixContainer = new Group(pieChartContainer, SWT.NONE);
         prefixContainer.setLayout(new FillLayout(SWT.VERTICAL));
@@ -225,6 +235,7 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
     @Override
     public void allIncluded() {
         mTableViewer.setInput(items.values());
+        mPieChart.setInput(items.values());
         mAllIncluded = true;
         lastRef = null;
     }
