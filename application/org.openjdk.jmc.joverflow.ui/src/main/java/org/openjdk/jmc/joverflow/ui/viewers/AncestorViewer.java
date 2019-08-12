@@ -44,12 +44,15 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
 
         mPieChart = new PieChartViewer(pieChartContainer, SWT.BORDER);
         mPieChart.setContentProvider(ArrayContentProvider.getInstance());
-        mPieChart.setArcAttributeProvider(new ArcAttributeProvider(){
+        ColorIndexedArcAttributeProvider provider = new ColorIndexedArcAttributeProvider(){
             @Override
             public int getWeight(Object element) {
                 return (int) ((MemoryStatisticsItem) element).getMemory();
             }
-        });
+        };
+        provider.setMinimumArcAngle(5);
+        mPieChart.setArcAttributeProvider(provider);
+        mPieChart.setMinimumArcAngle(5);
         mPieChart.getPieChart().setZoomRatio(1.2);
         mPieChart.setComparator(new ViewerComparator() {
             @Override
@@ -115,7 +118,7 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
         Group ancestorReferrerTableContainer = new Group(bottomRightSash, SWT.NONE);
         ancestorReferrerTableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-        mTableViewer = new MemoryStatisticsTableViewer<>(ancestorReferrerTableContainer, SWT.BORDER | SWT.FULL_SELECTION);
+        mTableViewer = new MemoryStatisticsTableViewer<>(ancestorReferrerTableContainer, SWT.BORDER | SWT.FULL_SELECTION, (e) -> mPieChart.getArcAttributeProvider().getColor(e));
         mTableViewer.addSelectionChangedListener((event) -> {
             if (event.getStructuredSelection().isEmpty()) {
                 return;

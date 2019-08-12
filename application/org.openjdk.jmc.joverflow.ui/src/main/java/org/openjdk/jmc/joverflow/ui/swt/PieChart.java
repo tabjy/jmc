@@ -142,6 +142,7 @@ public class PieChart extends Canvas {
     }
 
     public void removeItem(int index) {
+        mArcs.get(index).dispose();
         mArcs.remove(index);
     }
 

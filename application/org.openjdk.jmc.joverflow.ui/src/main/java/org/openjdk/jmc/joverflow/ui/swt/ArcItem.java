@@ -25,13 +25,17 @@ public class ArcItem extends Item {
         parent.createItem(this, index);
     }
 
-    public void setAngle(int mAngle) {
-        if (mAngle < 0) {
+    public void setAngle(int angle) {
+        if (angle < 0) {
             SWT.error(SWT.ERROR_INVALID_RANGE);
             return;
         }
 
-        this.mAngle = mAngle % 360;
+        if (angle > 360) {
+            mAngle = angle % 360;
+        } else {
+            mAngle = angle;
+        }
         mParent.redraw();
     }
 
@@ -63,7 +67,7 @@ public class ArcItem extends Item {
 
         if (paintArcBorder) {
             gc.drawArc(center.x - outerRadius, center.y - outerRadius, outerRadius * 2, outerRadius * 2, startAngle, mAngle);
-            if (zoomRatio != 1) {
+            if (zoomRatio != 1 && mAngle < 360) {
                 gc.drawLine(
                         (int) (center.x + Math.cos(Math.toRadians(startAngle)) * radius),
                         (int) (center.y - Math.sin(Math.toRadians(startAngle)) * radius),
@@ -77,7 +81,7 @@ public class ArcItem extends Item {
             }
         }
 
-        if ((mStyle & SWT.BORDER) == SWT.BORDER) {
+        if ((mStyle & SWT.BORDER) == SWT.BORDER && mAngle < 360) {
             gc.drawLine(
                     center.x,
                     center.y,

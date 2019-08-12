@@ -22,7 +22,7 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
             mItems[t.ordinal()] = new MemoryStatisticsItem(t, 0, 0, 0);
         }
 
-        mTableViewer = new MemoryStatisticsTableViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION);
+        mTableViewer = new MemoryStatisticsTableViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION, null);
         mTableViewer.setPrimaryColumnText("Object Selection");
     }
 
