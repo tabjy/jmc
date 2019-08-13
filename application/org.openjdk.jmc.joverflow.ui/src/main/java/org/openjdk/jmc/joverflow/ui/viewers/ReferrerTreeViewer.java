@@ -24,16 +24,17 @@ class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
 
         setContentProvider(new ReferrerItemContentProvider());
 
+        // TODO: change to a conversion method (from B to KB) that's not so primitive
         createTreeViewerColumn("Referrer",
                 T::getName,
                 (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()));
-        createTreeViewerColumn("Memory KB",
+        createTreeViewerColumn("Memory KiB",
                 model -> String.format("%d (%d%%)", model.getMemory() / 1024, model.getMemory() * 100 / mTotalMemory),
                 (lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()),
                 TreeViewerColumnComparator.Direction.Desc
         );
 
-        createTreeViewerColumn("Overhead KB",
+        createTreeViewerColumn("Overhead KiB",
                 model -> String.format("%d (%d%%)", model.getOvhd() / 1024, model.getOvhd() * 100 / mTotalMemory),
                 (lhs, rhs) -> (int) (lhs.getOvhd() - rhs.getOvhd()));
 

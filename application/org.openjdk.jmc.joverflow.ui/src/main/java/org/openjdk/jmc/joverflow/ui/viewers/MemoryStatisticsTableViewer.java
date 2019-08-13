@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.*;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -22,10 +23,10 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
     private Function<T, Color> mColorProvider;
 
     MemoryStatisticsTableViewer(Composite parent, int style, Function<T, Color> colorProvider) {
-        super(parent, style);
+        super(parent, style | SWT.VIRTUAL);
 
         mColorProvider = colorProvider;
-        setContentProvider(MemoryStatisticsItemContentProvider.getInstance());
+        setContentProvider(new MemoryStatisticsItemContentProvider());
 
         // TODO: change to a conversion method that's not so primitive
         mPrimaryColumn = createTableColumnViewer("Name",
@@ -99,17 +100,17 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
             }
         });
 
-        TableViewerColumnComparator cmp = new TableViewerColumnComparator(this, column) {
-            @SuppressWarnings("unchecked")
-            @Override
-            protected int doCompare(Object e1, Object e2) {
-                return comparator.apply((T) e1, (T) e2);
-            }
-        };
-
-        if (sortDirection != null) {
-            cmp.setSorter(sortDirection);
-        }
+//        TableViewerColumnComparator cmp = new TableViewerColumnComparator(this, column) {
+//            @SuppressWarnings("unchecked")
+//            @Override
+//            protected int doCompare(Object e1, Object e2) {
+//                return comparator.apply((T) e1, (T) e2);
+//            }
+//        };
+//
+//        if (sortDirection != null) {
+//            cmp.setSorter(sortDirection);
+//        }
 
         return column;
     }
@@ -194,25 +195,32 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
         abstract int doCompare(Object e1, Object e2);
     }
 
-    static class MemoryStatisticsItemContentProvider extends ArrayContentProvider {
+    static class MemoryStatisticsItemContentProvider implements ILazyContentProvider {
+        private TableViewer mViewer;
+        private Object[] mElements;
 
-        private static MemoryStatisticsItemContentProvider instance;
-
-        public static MemoryStatisticsItemContentProvider getInstance() {
-            synchronized (MemoryStatisticsItemContentProvider.class) {
-                if (instance == null) {
-                    instance = new MemoryStatisticsItemContentProvider();
-                }
-                return instance;
-            }
+        @Override
+        public void updateElement(int index) {
+            mViewer.replace(mElements[index], index);
         }
 
         @Override
-        public Object[] getElements(Object inputElement) {
-            return Arrays
-                    .stream(super.getElements(inputElement))
+        public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+            mViewer = (TableViewer) viewer;
+            if (newInput instanceof Object[]) {
+                mElements = (Object[]) newInput;
+            } else if (newInput instanceof Collection) {
+                mElements = ((Collection) newInput).toArray();
+            } else {
+                mElements = new Object[0];
+            }
+
+            mElements = Arrays
+                    .stream(mElements)
                     .filter(x -> ((MemoryStatisticsItem) x).getSize() > 0)
                     .toArray();
+
+            mViewer.setItemCount(mElements.length);
         }
     }
 

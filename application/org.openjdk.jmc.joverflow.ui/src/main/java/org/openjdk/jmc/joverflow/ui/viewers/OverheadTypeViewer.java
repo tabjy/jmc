@@ -1,6 +1,9 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.viewers.*;
+import org.eclipse.jface.viewers.deferred.IConcurrentModel;
+import org.eclipse.jface.viewers.deferred.IConcurrentModelListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -13,96 +16,98 @@ import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 
 public class OverheadTypeViewer extends ContentViewer implements ModelListener {
 
-    private final MemoryStatisticsTableViewer<MemoryStatisticsItem> mTableViewer;
-    private MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
-    private boolean mAllIncluded = false;
+	private final MemoryStatisticsTableViewer<MemoryStatisticsItem> mTableViewer;
+	private MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
+	private boolean mAllIncluded = false;
 
-    public OverheadTypeViewer(Composite parent, int style) {
-        for (ClusterType t : ClusterType.values()) {
-            mItems[t.ordinal()] = new MemoryStatisticsItem(t, 0, 0, 0);
-        }
+	public OverheadTypeViewer(Composite parent, int style) {
+		for (ClusterType t : ClusterType.values()) {
+			mItems[t.ordinal()] = new MemoryStatisticsItem(t, 0, 0, 0);
+		}
 
-        mTableViewer = new MemoryStatisticsTableViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION, null);
-        mTableViewer.setPrimaryColumnText("Object Selection");
-    }
+		mTableViewer = new MemoryStatisticsTableViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION, null);
+		mTableViewer.setPrimaryColumnText("Object Selection");
+	}
 
-    @Override
-    public Control getControl() {
-        return mTableViewer.getControl();
-    }
+	@Override
+	public Control getControl() {
+		return mTableViewer.getControl();
+	}
 
-    @Override
-    public void addSelectionChangedListener(ISelectionChangedListener listener) {
-        mTableViewer.addSelectionChangedListener(listener);
-    }
+	@Override
+	public void addSelectionChangedListener(ISelectionChangedListener listener) {
+		mTableViewer.addSelectionChangedListener(listener);
+	}
 
-    @Override
-    public ISelection getSelection() {
-        return mTableViewer.getSelection();
-    }
+	@Override
+	public ISelection getSelection() {
+		return mTableViewer.getSelection();
+	}
 
-    @Override
-    public void removeSelectionChangedListener(ISelectionChangedListener listener) {
-        mTableViewer.removeSelectionChangedListener(listener);
-    }
+	@Override
+	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+		mTableViewer.removeSelectionChangedListener(listener);
+	}
 
-    @Override
-    public void setSelection(ISelection selection) {
-        mTableViewer.setSelection(selection);
-    }
+	@Override
+	public void setSelection(ISelection selection) {
+		mTableViewer.setSelection(selection);
+	}
 
-    @Override
-    public void refresh() {
-        mTableViewer.refresh();
-    }
+	@Override
+	public void refresh() {
+		mTableViewer.refresh();
+	}
 
-    @Override
-    public void setSelection(ISelection selection, boolean reveal) {
-        mTableViewer.setSelection(selection, reveal);
-    }
+	@Override
+	public void setSelection(ISelection selection, boolean reveal) {
+		mTableViewer.setSelection(selection, reveal);
+	}
 
-    @Override
-    public void include(ObjectCluster oc, RefChainElement ref) {
-        if (mAllIncluded) {
-            for (MemoryStatisticsItem item : mItems) {
-                item.reset();
-            }
-            mAllIncluded = false;
-        }
+	@Override
+	public void include(ObjectCluster oc, RefChainElement ref) {
+		if (mAllIncluded) {
+			for (MemoryStatisticsItem item : mItems) {
+				item.reset();
+			}
+			mAllIncluded = false;
+		}
 
-        if (oc.getType() != null) {
-            mItems[oc.getType().ordinal()].addObjectCluster(oc);
-        }
-    }
+		if (oc.getType() != null) {
+			mItems[oc.getType().ordinal()].addObjectCluster(oc);
+		}
+	}
 
-    @Override
-    public void allIncluded() {
+	@Override
+	public void allIncluded() {
         mTableViewer.setInput(mItems);
-        mAllIncluded = true;
-    }
+//        mTableViewer.setItemCount(mItems.length);
+		mAllIncluded = true;
+	}
 
-    public ClusterType getCurrentType() {
-        ISelection selection = getSelection();
-        if (selection.isEmpty() || !(selection instanceof StructuredSelection)) {
-            return ClusterType.ALL_OBJECTS;
-        }
-        ClusterType type = (ClusterType) ((MemoryStatisticsItem) ((StructuredSelection) getSelection()).getFirstElement()).getId();
-        if (type == null) {
-            return ClusterType.ALL_OBJECTS;
-        }
+	public ClusterType getCurrentType() {
+		ISelection selection = getSelection();
+		if (selection.isEmpty() || !(selection instanceof StructuredSelection)) {
+			return ClusterType.ALL_OBJECTS;
+		}
+		ClusterType type = (ClusterType) ((MemoryStatisticsItem) ((StructuredSelection) getSelection())
+				.getFirstElement()).getId();
+		if (type == null) {
+			return ClusterType.ALL_OBJECTS;
+		}
 
-        return type;
-    }
+		return type;
+	}
 
-    public void setTotalMemory(long memory) {
-        mTableViewer.setTotalMemory(memory);
-    }
+	public void setTotalMemory(long memory) {
+		mTableViewer.setTotalMemory(memory);
+	}
 
-    public void reset() {
-        for (TableItem item : mTableViewer.getTable().getItems()) {
-            if (ClusterType.ALL_OBJECTS == ((MemoryStatisticsItem) item.getData()).getId()) {
-                mTableViewer.getTable().setSelection(item);
-            }
-        }
-    }
+	public void reset() {
+		for (TableItem item : mTableViewer.getTable().getItems()) {
+			if (ClusterType.ALL_OBJECTS == ((MemoryStatisticsItem) item.getData()).getId()) {
+				mTableViewer.getTable().setSelection(item);
+			}
+		}
+	}
 }

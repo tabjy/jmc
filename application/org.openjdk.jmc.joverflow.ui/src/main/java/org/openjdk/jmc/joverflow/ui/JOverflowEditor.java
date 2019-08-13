@@ -102,7 +102,6 @@ public class JOverflowEditor extends EditorPart {
     }
 
     private void loadModel(final IPathEditorInput input) {
-
         if (mLoader != null) {
             mLoader.cancel();
             mLoader = null;

@@ -15,6 +15,7 @@ import org.openjdk.jmc.joverflow.ui.model.ReferrerItemBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.function.Predicate;
 
 public class ReferrerViewer extends ContentViewer implements ModelListener {
@@ -62,9 +63,12 @@ public class ReferrerViewer extends ContentViewer implements ModelListener {
         if (mItemBuilder == null) {
             mTreeViewer.setInput(new ArrayList<ReferrerItem>());
         } else {
-            mTreeViewer.setInput(mItemBuilder.buildReferrerList());
+        	List<ReferrerItem> list = mItemBuilder.buildReferrerList();
+            mTreeViewer.setInput(list);
             mTreeViewer.expandAll();
             mItemBuilder = null;
+            
+            System.out.println("ReferrerViewer has " + list.size() + " entries");
         }
     }
 

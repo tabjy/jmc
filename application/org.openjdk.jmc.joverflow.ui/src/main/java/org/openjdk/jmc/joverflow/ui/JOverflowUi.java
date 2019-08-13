@@ -14,6 +14,8 @@ import org.openjdk.jmc.joverflow.ui.viewers.ClusterGroupViewer;
 import org.openjdk.jmc.joverflow.ui.viewers.OverheadTypeViewer;
 import org.openjdk.jmc.joverflow.ui.viewers.ReferrerViewer;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -40,7 +42,7 @@ public class JOverflowUi extends Composite {
 
         {
             SashForm vSashLeft = new SashForm(hSash, SWT.VERTICAL);
-            // Type Viewer
+            // Type Viewer (top-left)
             {
                 Group topLeftContainer = new Group(vSashLeft, SWT.NONE);
                 topLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -49,7 +51,7 @@ public class JOverflowUi extends Composite {
                 mOverheadTypeViewer.addSelectionChangedListener((event) -> updateModel());
             }
 
-            // Cluster Group Viewer
+            // Cluster Group Viewer (bottom-left)
             {
                 Group bottomLeftContainer = new Group(vSashLeft, SWT.NONE);
                 bottomLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -62,7 +64,7 @@ public class JOverflowUi extends Composite {
 
         {
             SashForm vSashRight = new SashForm(hSash, SWT.VERTICAL);
-            // Referrer Viewer
+            // Referrer Viewer (top-right)
             {
                 Group topRightContainer = new Group(vSashRight, SWT.NONE);
                 topRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -71,7 +73,7 @@ public class JOverflowUi extends Composite {
                 mReferrerViewer.addSelectionChangedListener((event) -> updateModel());
             }
 
-            // AncestorViewer
+            // Ancestor Viewer (bottom-right)
             {
                 Group bottomRightContainer = new Group(vSashRight, SWT.NONE);
                 bottomRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -106,6 +108,7 @@ public class JOverflowUi extends Composite {
         }
 
         mUpdatingModel = true;
+        Instant then = Instant.now();
 
         ClusterType currentType = mOverheadTypeViewer.getCurrentType();
 
@@ -136,20 +139,39 @@ public class JOverflowUi extends Composite {
             }
         }
 
+        System.out.println("building model took: " + Duration.between(Instant.now(), then).toString());
+
         // Notify all that update is done
         mOverheadTypeViewer.setTotalMemory(mTotalMemory);
         mReferrerViewer.setTotalMemory(mTotalMemory);
         mClusterGroupViewer.setTotalMemory(mTotalMemory);
         mAncestorViewer.setTotalMemory(mTotalMemory);
         
+        Instant then2 = Instant.now();
+        
+        then = Instant.now();
         mReferrerViewer.allIncluded();
+        System.out.println("rendering ReferrerViewer took: " + Duration.between(Instant.now(), then).toString());
+        
+        then = Instant.now();
         mClusterGroupViewer.allIncluded();
+        System.out.println("rendering ClusterGroupViewer took: " + Duration.between(Instant.now(), then).toString());
+               
+        then = Instant.now();
         mAncestorViewer.allIncluded();
+        System.out.println("rendering AncestorViewer took: " + Duration.between(Instant.now(), then).toString());
+        
+        then = Instant.now();
         mOverheadTypeViewer.allIncluded();
+        System.out.println("rendering OverheadTypeViewer took: " + Duration.between(Instant.now(), then).toString());
 
+        then = Instant.now();
         for (ModelListener l : mModelListeners) {
             l.allIncluded();
         }
+        System.out.println("rendering others took: " + Duration.between(Instant.now(), then).toString());
+
+        System.out.println("rendering UI took: " + Duration.between(Instant.now(), then2).toString());
 
         mUpdatingModel = false;
     }
