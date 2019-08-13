@@ -67,6 +67,11 @@ public class InstancesPageBookView extends PageBookView {
 
 	@Override
 	protected void doDestroyPage(IWorkbenchPart part, PageRec pageRecord) {
+		if (part instanceof JOverflowEditor) {
+			final JOverflowEditor editor = ((JOverflowEditor) part);
+			editor.getJOverflowUi().removeModelListener((JavaThingPage)pageRecord.page);
+		}
+
 		pageRecord.page.dispose();
 		pageRecord.dispose();
 	}
