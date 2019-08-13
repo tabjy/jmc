@@ -33,7 +33,6 @@
 package org.openjdk.jmc.joverflow.ui.model;
 
 import org.openjdk.jmc.joverflow.heap.model.JavaThing;
-import org.openjdk.jmc.joverflow.ui.tabletree.TreeItem;
 
 /**
  * A {@code TreeItem} for a {@code JavaThing}

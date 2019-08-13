@@ -9,6 +9,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Widget;
 import org.openjdk.jmc.joverflow.ui.swt.ArcItem;
 import org.openjdk.jmc.joverflow.ui.swt.PieChart;
+import org.openjdk.jmc.joverflow.ui.util.ArcAttributeChangedEvent;
+import org.openjdk.jmc.joverflow.ui.util.BaseArcAttributeProvider;
+import org.openjdk.jmc.joverflow.ui.util.IArcAttributeProvider;
+import org.openjdk.jmc.joverflow.ui.util.IArcAttributeProviderListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;

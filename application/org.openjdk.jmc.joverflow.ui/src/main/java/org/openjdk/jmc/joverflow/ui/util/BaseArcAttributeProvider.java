@@ -1,10 +1,10 @@
-package org.openjdk.jmc.joverflow.ui.viewers;
+package org.openjdk.jmc.joverflow.ui.util;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 
-class BaseArcAttributeProvider implements IArcAttributeProvider {
+public class BaseArcAttributeProvider implements IArcAttributeProvider {
     private ListenerList<IArcAttributeProviderListener> mListenerList = new ListenerList<>();
 
     protected final Color[] COLORS = {

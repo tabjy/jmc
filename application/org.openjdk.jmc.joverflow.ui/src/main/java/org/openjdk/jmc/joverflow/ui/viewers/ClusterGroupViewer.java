@@ -11,6 +11,7 @@ import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
+import org.openjdk.jmc.joverflow.ui.util.ColorIndexedArcAttributeProvider;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,55 +66,124 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
         classTableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
         mTableViewer = new MemoryStatisticsTableViewer<>(classTableContainer, SWT.BORDER | SWT.FULL_SELECTION, (e) -> mPieChart.getArcAttributeProvider().getColor(e));
+
+        mTableViewer.getTable().addMouseListener(new MouseListener() {
+            @Override
+            public void mouseDoubleClick(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseDown(MouseEvent e) {
+                if (mTableViewer.getSelection().isEmpty()) {
+                    return;
+                }
+                IStructuredSelection selection = (IStructuredSelection) mTableViewer.getSelection();
+                MemoryStatisticsItem item = (MemoryStatisticsItem) selection.getFirstElement();
+                if (e.button == 1) { // left click
+                    String qualifierName = mQualifierName;
+                    String itemName = item.getId().toString();
+                    boolean excluded = false;
+                    Predicate<ObjectCluster> filter = (oc) -> {
+                        if (qualifierName == null) {
+                            return itemName.equals(oc.getClassName()) ^ excluded;
+                        }
+
+                        if (oc.getQualifier() == null) {
+                            return true;
+                        }
+
+                        return itemName.equals(oc.getQualifier()) ^ excluded;
+                    };
+                    mFilters.add(filter);
+
+                    Button button = new Button(mFilterContainer, SWT.NONE);
+                    button.setText((mQualifierName == null ? "Class" : mQualifierName) + " = " + item.getId().toString());
+                    button.addMouseListener(new MouseListener() {
+                        @Override
+                        public void mouseDoubleClick(MouseEvent e) {
+                            // intentionally empty
+                        }
+
+                        @Override
+                        public void mouseDown(MouseEvent e) {
+                            mFilters.remove(filter);
+                            button.dispose();
+
+                            // TODO: investigate why layout is not auto updated
+                            mFilterContainer.layout(true, true);
+                            mTableViewer.getTable().setFocus();
+                            mTableViewer.setSelection(StructuredSelection.EMPTY, true);
+                        }
+
+                        @Override
+                        public void mouseUp(MouseEvent e) {
+                            // intentionally empty
+                        }
+                    });
+
+                    // TODO: investigate why layout is not auto updated
+                    mFilterContainer.layout(true, true);
+                } else if (e.button == 3) { // right click
+                    String qualifierName = mQualifierName;
+                    String itemName = item.getId().toString();
+                    boolean excluded = true;
+                    Predicate<ObjectCluster> filter = (oc) -> {
+                        if (qualifierName == null) {
+                            return itemName.equals(oc.getClassName()) ^ excluded;
+                        }
+
+                        if (oc.getQualifier() == null) {
+                            return true;
+                        }
+
+                        return itemName.equals(oc.getQualifier()) ^ excluded;
+                    };
+                    mFilters.add(filter);
+
+                    Button button = new Button(mFilterContainer, SWT.NONE);
+                    button.setText((mQualifierName == null ? "Class" : mQualifierName) + " = " + item.getId().toString());
+                    button.addMouseListener(new MouseListener() {
+                        @Override
+                        public void mouseDoubleClick(MouseEvent e) {
+                            // intentionally empty
+                        }
+
+                        @Override
+                        public void mouseDown(MouseEvent e) {
+                            mFilters.remove(filter);
+                            button.dispose();
+
+                            // TODO: investigate why layout is not auto updated
+                            mFilterContainer.layout(true, true);
+                            mTableViewer.getTable().setFocus();
+                            mTableViewer.setSelection(StructuredSelection.EMPTY, true);
+                        }
+
+                        @Override
+                        public void mouseUp(MouseEvent e) {
+                            // intentionally empty
+                        }
+                    });
+
+                    // TODO: investigate why layout is not auto updated
+                    mFilterContainer.layout(true, true);
+                }
+            }
+
+            @Override
+            public void mouseUp(MouseEvent e) {
+
+            }
+        });
+
         mTableViewer.addSelectionChangedListener((event) -> {
             if (event.getStructuredSelection().isEmpty()) {
                 return;
             }
             MemoryStatisticsItem item = (MemoryStatisticsItem) event.getStructuredSelection().getFirstElement();
 
-            String qualifierName = mQualifierName;
-            String itemName = item.getId().toString();
-            boolean excluded = false;
-            Predicate<ObjectCluster> filter = (oc) -> {
-                if (qualifierName == null) {
-                    return itemName.equals(oc.getClassName()) ^ excluded;
-                }
 
-                if (oc.getQualifier() == null) {
-                    return true;
-                }
-
-                return itemName.equals(oc.getQualifier()) ^ excluded;
-            };
-            mFilters.add(filter);
-
-            Button button = new Button(mFilterContainer, SWT.NONE);
-            button.setText((mQualifierName == null ? "Class" : mQualifierName) + " = " + item.getId().toString());
-            button.addMouseListener(new MouseListener() {
-                @Override
-                public void mouseDoubleClick(MouseEvent e) {
-                    // intentionally empty
-                }
-
-                @Override
-                public void mouseDown(MouseEvent e) {
-                    mFilters.remove(filter);
-                    button.dispose();
-
-                    // TODO: investigate why layout is not auto updated
-                    mFilterContainer.layout(true, true);
-                    mTableViewer.getTable().setFocus();
-                    mTableViewer.setSelection(StructuredSelection.EMPTY, true);
-                }
-
-                @Override
-                public void mouseUp(MouseEvent e) {
-                    // intentionally empty
-                }
-            });
-
-            // TODO: investigate why layout is not auto updated
-            mFilterContainer.layout(true, true);
         });
     }
     

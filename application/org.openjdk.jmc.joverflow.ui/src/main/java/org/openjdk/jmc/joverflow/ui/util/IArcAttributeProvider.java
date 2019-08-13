@@ -1,7 +1,6 @@
-package org.openjdk.jmc.joverflow.ui.viewers;
+package org.openjdk.jmc.joverflow.ui.util;
 
 import org.eclipse.core.runtime.ListenerList;
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Color;
 
 public interface IArcAttributeProvider {
