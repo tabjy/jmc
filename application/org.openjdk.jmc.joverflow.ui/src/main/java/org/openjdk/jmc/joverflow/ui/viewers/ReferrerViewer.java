@@ -11,6 +11,7 @@ import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItemBuilder;
+import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,14 +21,16 @@ import java.util.function.Predicate;
 
 public class ReferrerViewer extends ContentViewer implements ModelListener {
 
-    private ReferrerTreeViewer<ReferrerItem> mTreeViewer;
+    private ReferrerTreeViewer mTreeViewer;
     private ReferrerItemBuilder mItemBuilder;
+    private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 
     private Collection<ISelectionChangedListener> mListeners = new HashSet<>();
     private ReferrerItem mSelectedItem;
 
     public ReferrerViewer(Composite parent, int style) {
-        mTreeViewer = new ReferrerTreeViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION);
+        mTreeViewer = new ReferrerTreeViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
+        mTreeViewer.setInput(mInputModel);
 
         mTreeViewer.addSelectionChangedListener(event -> {
             if (event.getStructuredSelection().isEmpty()) {
@@ -61,11 +64,10 @@ public class ReferrerViewer extends ContentViewer implements ModelListener {
     @Override
     public void allIncluded() {
         if (mItemBuilder == null) {
-            mTreeViewer.setInput(new ArrayList<ReferrerItem>());
+            mInputModel.setInput(null);
         } else {
         	List<ReferrerItem> list = mItemBuilder.buildReferrerList();
-            mTreeViewer.setInput(list);
-            mTreeViewer.expandAll();
+            mInputModel.setInput(list.toArray());
             mItemBuilder = null;
             
             System.out.println("ReferrerViewer has " + list.size() + " entries");

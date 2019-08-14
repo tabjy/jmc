@@ -61,6 +61,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
         getTable().setHeaderVisible(true);
     }
 
+    @SuppressWarnings("Duplicates")
     private TableViewerColumn createTableColumnViewer(String label, Function<MemoryStatisticsItem, String> labelProvider, Function<MemoryStatisticsItem, Color> colorProvider, BiFunction<MemoryStatisticsItem, MemoryStatisticsItem, Integer> comparator, boolean sort) {
         TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
         column.getColumn().setWidth(200);
@@ -147,6 +148,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
             }
         }
 
+        @SuppressWarnings("Duplicates")
         private void onClicked() {
             if (mActiveColumnComparator == this) {
                 decreasing = !decreasing;

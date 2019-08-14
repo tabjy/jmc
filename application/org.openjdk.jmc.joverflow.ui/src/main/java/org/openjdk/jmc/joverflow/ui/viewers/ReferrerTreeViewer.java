@@ -1,81 +1,110 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
 import org.eclipse.jface.viewers.*;
+import org.eclipse.jface.viewers.deferred.DeferredContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Widget;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
+// ReferrerTreeViewer is actually a TableViewer with its tree-like content
+class ReferrerTreeViewer extends TableViewer {
 
     private long mTotalMemory;
 
-    ReferrerTreeViewer(Composite parent, int style) {
-        super(parent, style);
+    private TreeViewerColumnComparator mActiveColumnComparator;
+    private DeferredContentProvider mContentProvider;
 
-        setContentProvider(new ReferrerItemContentProvider());
+    ReferrerTreeViewer(Composite parent, int style) {
+        super(parent, style | SWT.VIRTUAL);
+
+        mContentProvider = new DeferredContentProvider((lhs, rhs) -> 0);
+        mContentProvider.setFilter(element -> ((ReferrerItem) element).getSize() > 0);
+        setContentProvider(mContentProvider);
 
         // TODO: change to a conversion method (from B to KB) that's not so primitive
         createTreeViewerColumn("Referrer",
-                T::getName,
-                (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()));
+                ReferrerItem::getName,
+                (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()),
+                false, true);
+
         createTreeViewerColumn("Memory KiB",
                 model -> String.format("%d (%d%%)", model.getMemory() / 1024, model.getMemory() * 100 / mTotalMemory),
                 (lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()),
-                TreeViewerColumnComparator.Direction.Desc
-        );
+                true, false);
 
         createTreeViewerColumn("Overhead KiB",
                 model -> String.format("%d (%d%%)", model.getOvhd() / 1024, model.getOvhd() * 100 / mTotalMemory),
-                (lhs, rhs) -> (int) (lhs.getOvhd() - rhs.getOvhd()));
+                (lhs, rhs) -> (int) (lhs.getOvhd() - rhs.getOvhd()),
+                false, false);
 
         createTreeViewerColumn("Objects",
                 model -> String.valueOf(model.getSize()),
-                (lhs, rhs) -> lhs.getSize() - rhs.getSize());
+                (lhs, rhs) -> lhs.getSize() - rhs.getSize(),
+                false, false);
 
-        getTree().setLinesVisible(true);
-        getTree().setHeaderVisible(true);
+        getTable().setLinesVisible(true);
+        getTable().setHeaderVisible(true);
     }
 
-
-    private void createTreeViewerColumn(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator) {
-        createTreeViewerColumn(label, labelProvider, comparator, null);
-    }
-
-    private void createTreeViewerColumn(String label, Function<T, String> labelProvider, BiFunction<T, T, Integer> comparator, TreeViewerColumnComparator.Direction sortDirection) {
-        TreeViewerColumn column = new TreeViewerColumn(this, SWT.NONE);
+    @SuppressWarnings("Duplicates")
+    private void createTreeViewerColumn(String label, Function<ReferrerItem, String> labelProvider, BiFunction<ReferrerItem, ReferrerItem, Integer> comparator, boolean sort, boolean intent) {
+        TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
         column.getColumn().setWidth(200);
         column.getColumn().setText(label);
         column.getColumn().setMoveable(true);
 
-        column.setLabelProvider(new ColumnLabelProvider() {
-            @SuppressWarnings("unchecked")
+        column.setLabelProvider(new OwnerDrawLabelProvider() {
             @Override
-            public String getText(Object element) {
-                return labelProvider.apply((T) element);
+            protected void paint(Event event, Object element) {
+                Widget item = event.item;
+
+                if (element == null) {
+                    // FIXME: Bug 146799 https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
+                    return;
+                }
+                Rectangle bounds = ((TableItem) item).getBounds(event.index);
+                Point p = event.gc.stringExtent(labelProvider.apply((ReferrerItem) element));
+
+                int margin = (bounds.height - p.y) / 2;
+                int dx = bounds.x + margin;
+
+                if (intent) {
+                    dx += 10 * ((ReferrerItem) element).getLevel();
+                }
+
+                event.gc.drawString(labelProvider.apply((ReferrerItem) element), dx, bounds.y + margin, true);
+            }
+
+            @Override
+            protected void measure(Event event, Object element) {
+                // no op
+            }
+
+            @Override
+            protected void erase(Event event, Object element) {
+                // no op
             }
         });
 
-        TreeViewerColumnComparator cmp = new TreeViewerColumnComparator(this, column) {
-            @SuppressWarnings("unchecked")
+        TreeViewerColumnComparator cmp = new TreeViewerColumnComparator() {
             @Override
-            protected int doCompare(Object e1, Object e2) {
-                return comparator.apply((T) e1, (T) e2);
+            int doCompare(Object e1, Object e2) {
+                return comparator.apply((ReferrerItem) e1, (ReferrerItem) e2);
             }
         };
 
-        if (sortDirection != null) {
-            cmp.setSorter(sortDirection);
-        }
+        cmp.init(this, column, sort);
     }
 
     private class ReferrerItemContentProvider implements ITreeContentProvider {
@@ -134,83 +163,56 @@ class ReferrerTreeViewer<T extends ReferrerItem> extends TreeViewer {
         }
     }
 
-    static abstract class TreeViewerColumnComparator extends ViewerComparator {
-        public enum Direction {
-            Asc,
-            Desc
-        }
+    void setTotalMemory(long memory) {
+        mTotalMemory = memory;
+    }
 
-        private Direction direction = null;
-        private TreeViewerColumn column;
-        private ColumnViewer viewer;
+    abstract class TreeViewerColumnComparator implements Comparator {
+        private boolean decreasing = true;
 
-        TreeViewerColumnComparator(ColumnViewer viewer, TreeViewerColumn column) {
-            this.column = column;
-            this.viewer = viewer;
+        ColumnViewer mViewer;
+        TableViewerColumn mColumn;
 
-            TreeViewerColumnComparator that = this;
+        void init(ColumnViewer viewer, TableViewerColumn column, boolean sorted) {
+            mViewer = viewer;
+            mColumn = column;
 
-            this.column.getColumn().addSelectionListener(new SelectionAdapter() {
+            mColumn.getColumn().addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
-                    if (viewer.getComparator() == null) {
-                        that.setSorter(Direction.Asc);
-                        return;
-                    }
-
-                    if (viewer.getComparator() != that) {
-                        that.setSorter(Direction.Asc);
-                        return;
-                    }
-
-                    switch (that.direction) {
-                        case Asc:
-                            that.setSorter(Direction.Desc);
-                            break;
-                        case Desc:
-                            that.setSorter(null);
-                            break;
-                    }
+                    onClicked();
                 }
             });
+
+            if (sorted) {
+                onClicked();
+            }
         }
 
-        void setSorter(Direction direction) {
-            this.direction = direction;
-
-            Tree columnParent = column.getColumn().getParent();
-            if (direction == null) {
-                columnParent.setSortColumn(null);
-                columnParent.setSortDirection(SWT.NONE);
-                viewer.setComparator(null);
-                return;
-            }
-
-            columnParent.setSortColumn(column.getColumn());
-            columnParent.setSortDirection(direction == Direction.Asc ? SWT.UP : SWT.DOWN);
-
-            if (viewer.getComparator() == this) {
-                viewer.refresh();
+        @SuppressWarnings("Duplicates")
+        private void onClicked() {
+            if (mActiveColumnComparator == this) {
+                decreasing = !decreasing;
             } else {
-                viewer.setComparator(this);
+                mActiveColumnComparator = this;
             }
+
+            mColumn.getColumn().getParent().setSortColumn(mColumn.getColumn());
+            mColumn.getColumn().getParent().setSortDirection(decreasing ? SWT.DOWN : SWT.UP);
+
+            mContentProvider.setSortOrder(this);
         }
 
         @Override
-        public int compare(Viewer viewer, Object e1, Object e2) {
-            int multiplier = 0;
-            if (direction == Direction.Asc) {
-                multiplier = 1;
-            } else if (direction == Direction.Desc) {
-                multiplier = -1;
+        public int compare(Object e1, Object e2) {
+            if (((ReferrerItem) e1).getLevel() == ((ReferrerItem) e2).getLevel()) {
+            	return (decreasing ? -1 : 1) * doCompare(e1, e2);
+            	
+            } else {
+            	return ((ReferrerItem) e1).getLevel() - ((ReferrerItem) e2).getLevel();
             }
-            return multiplier * doCompare(e1, e2);
         }
 
         abstract int doCompare(Object e1, Object e2);
     }
-
-	void setTotalMemory(long memory) {
-		mTotalMemory = memory;
-	}
 }
