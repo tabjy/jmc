@@ -1,6 +1,7 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
 import org.eclipse.jface.viewers.*;
+import org.eclipse.jface.viewers.deferred.DeferredContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -10,54 +11,57 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableViewer {
+class MemoryStatisticsTableViewer extends TableViewer {
 
     private long mTotalMemory;
     private TableViewerColumn mPrimaryColumn;
+    private TableViewerColumnComparator mActiveColumnComparator;
+    private DeferredContentProvider mContentProvider;
 
-    private Function<T, Color> mColorProvider;
+    private Function<MemoryStatisticsItem, Color> mColorProvider;
 
-    MemoryStatisticsTableViewer(Composite parent, int style, Function<T, Color> colorProvider) {
+    MemoryStatisticsTableViewer(Composite parent, int style, Function<MemoryStatisticsItem, Color> colorProvider) {
         super(parent, style | SWT.VIRTUAL);
 
         mColorProvider = colorProvider;
-        setContentProvider(new MemoryStatisticsItemContentProvider());
+        mContentProvider = new DeferredContentProvider((lhs, rhs) -> 0);
+        mContentProvider.setFilter(element -> ((MemoryStatisticsItem) element).getSize() > 0);
+        setContentProvider(mContentProvider);
 
         // TODO: change to a conversion method that's not so primitive
         mPrimaryColumn = createTableColumnViewer("Name",
-                T::getName,
+                MemoryStatisticsItem::getName,
                 mColorProvider,
                 (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()),
-                null);
+                false);
 
         createTableColumnViewer("Memory KB",
                 model -> String.format("%d (%d%%)", model.getMemory() / 1024, model.getMemory() * 100 / mTotalMemory),
                 null,
                 (lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()),
-                TableViewerColumnComparator.Direction.Desc);
+                true);
 
         createTableColumnViewer("Overhead KB",
                 model -> String.format("%d (%d%%)", model.getOverhead() / 1024, model.getOverhead() * 100 / mTotalMemory),
                 null,
                 (lhs, rhs) -> (int) (lhs.getOverhead() - rhs.getOverhead()),
-                null);
+                false);
 
         createTableColumnViewer("Objects",
                 model -> String.valueOf(model.getSize()),
                 null,
                 (lhs, rhs) -> lhs.getSize() - rhs.getSize(),
-                null);
+                false);
 
         getTable().setLinesVisible(true);
         getTable().setHeaderVisible(true);
     }
 
-    private TableViewerColumn createTableColumnViewer(String label, Function<T, String> labelProvider, Function<T, Color> colorProvider, BiFunction<T, T, Integer> comparator, TableViewerColumnComparator.Direction sortDirection) {
+    private TableViewerColumn createTableColumnViewer(String label, Function<MemoryStatisticsItem, String> labelProvider, Function<MemoryStatisticsItem, Color> colorProvider, BiFunction<MemoryStatisticsItem, MemoryStatisticsItem, Integer> comparator, boolean sort) {
         TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
         column.getColumn().setWidth(200);
         column.getColumn().setText(label);
@@ -65,24 +69,24 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
 
         column.setLabelProvider(new OwnerDrawLabelProvider() {
             @Override
-            protected void measure(Event event, Object element) {
-                // no op
-            }
-
-            @Override
             protected void paint(Event event, Object element) {
                 Widget item = event.item;
+
+                if (element == null) {
+                    // FIXME: Bug 146799 https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
+                    return;
+                }
                 Rectangle bounds = ((TableItem) item).getBounds(event.index);
                 Color bg = event.gc.getBackground();
                 Color fg = event.gc.getForeground();
 
-                Point p = event.gc.stringExtent(labelProvider.apply((T) element));
+                Point p = event.gc.stringExtent(labelProvider.apply((MemoryStatisticsItem) element));
 
                 int margin = (bounds.height - p.y) / 2;
                 int dx = bounds.x + margin;
 
                 if (colorProvider != null) {
-                    event.gc.setBackground(colorProvider.apply((T) element));
+                    event.gc.setBackground(colorProvider.apply((MemoryStatisticsItem) element));
                     event.gc.fillArc(dx, bounds.y + margin + margin, p.y - margin - margin, p.y - margin - margin, 0, 360);
 
                     dx += p.y + margin;
@@ -91,7 +95,12 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
                 event.gc.setBackground(bg);
                 event.gc.setForeground(fg);
 
-                event.gc.drawString(labelProvider.apply((T) element), dx, bounds.y + margin, true);
+                event.gc.drawString(labelProvider.apply((MemoryStatisticsItem) element), dx, bounds.y + margin, true);
+            }
+
+            @Override
+            protected void measure(Event event, Object element) {
+                // no op
             }
 
             @Override
@@ -100,17 +109,14 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
             }
         });
 
-//        TableViewerColumnComparator cmp = new TableViewerColumnComparator(this, column) {
-//            @SuppressWarnings("unchecked")
-//            @Override
-//            protected int doCompare(Object e1, Object e2) {
-//                return comparator.apply((T) e1, (T) e2);
-//            }
-//        };
-//
-//        if (sortDirection != null) {
-//            cmp.setSorter(sortDirection);
-//        }
+        TableViewerColumnComparator cmp = new TableViewerColumnComparator() {
+            @Override
+            int doCompare(Object e1, Object e2) {
+                return comparator.apply((MemoryStatisticsItem) e1, (MemoryStatisticsItem) e2);
+            }
+        };
+
+        cmp.init(this, column, sort);
 
         return column;
     }
@@ -119,109 +125,47 @@ class MemoryStatisticsTableViewer<T extends MemoryStatisticsItem> extends TableV
         mTotalMemory = memory;
     }
 
-    static abstract class TableViewerColumnComparator extends ViewerComparator {
-        public enum Direction {
-            Asc,
-            Desc
-        }
+    abstract class TableViewerColumnComparator implements Comparator {
+        private boolean decreasing = true;
 
-        private Direction direction = null;
-        private TableViewerColumn column;
-        private ColumnViewer viewer;
+        ColumnViewer mViewer;
+        TableViewerColumn mColumn;
 
-        TableViewerColumnComparator(ColumnViewer viewer, TableViewerColumn column) {
-            this.column = column;
-            this.viewer = viewer;
+        void init(ColumnViewer viewer, TableViewerColumn column, boolean sorted) {
+            mViewer = viewer;
+            mColumn = column;
 
-            TableViewerColumnComparator that = this;
-
-            this.column.getColumn().addSelectionListener(new SelectionAdapter() {
+            mColumn.getColumn().addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
-                    if (viewer.getComparator() == null) {
-                        that.setSorter(Direction.Asc);
-                        return;
-                    }
-
-                    if (viewer.getComparator() != that) {
-                        that.setSorter(Direction.Asc);
-                        return;
-                    }
-
-                    switch (that.direction) {
-                        case Asc:
-                            that.setSorter(Direction.Desc);
-                            break;
-                        case Desc:
-                            that.setSorter(null);
-                            break;
-                    }
+                    onClicked();
                 }
             });
+
+            if (sorted) {
+                onClicked();
+            }
         }
 
-        void setSorter(Direction direction) {
-            this.direction = direction;
-
-            Table columnParent = column.getColumn().getParent();
-            if (direction == null) {
-                columnParent.setSortColumn(null);
-                columnParent.setSortDirection(SWT.NONE);
-                viewer.setComparator(null);
-                return;
-            }
-
-            columnParent.setSortColumn(column.getColumn());
-            columnParent.setSortDirection(direction == Direction.Asc ? SWT.UP : SWT.DOWN);
-
-            if (viewer.getComparator() == this) {
-                viewer.refresh();
+        private void onClicked() {
+            if (mActiveColumnComparator == this) {
+                decreasing = !decreasing;
             } else {
-                viewer.setComparator(this);
+                mActiveColumnComparator = this;
             }
+
+            mColumn.getColumn().getParent().setSortColumn(mColumn.getColumn());
+            mColumn.getColumn().getParent().setSortDirection(decreasing ? SWT.DOWN : SWT.UP);
+
+            mContentProvider.setSortOrder(this);
         }
 
         @Override
-        public int compare(Viewer viewer, Object e1, Object e2) {
-            int multiplier = 0;
-            if (direction == Direction.Asc) {
-                multiplier = 1;
-            } else if (direction == Direction.Desc) {
-                multiplier = -1;
-            }
-            return multiplier * doCompare(e1, e2);
+        public int compare(Object e1, Object e2) {
+            return (decreasing ? -1 : 1) * doCompare(e1, e2);
         }
 
         abstract int doCompare(Object e1, Object e2);
-    }
-
-    static class MemoryStatisticsItemContentProvider implements ILazyContentProvider {
-        private TableViewer mViewer;
-        private Object[] mElements;
-
-        @Override
-        public void updateElement(int index) {
-            mViewer.replace(mElements[index], index);
-        }
-
-        @Override
-        public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-            mViewer = (TableViewer) viewer;
-            if (newInput instanceof Object[]) {
-                mElements = (Object[]) newInput;
-            } else if (newInput instanceof Collection) {
-                mElements = ((Collection) newInput).toArray();
-            } else {
-                mElements = new Object[0];
-            }
-
-            mElements = Arrays
-                    .stream(mElements)
-                    .filter(x -> ((MemoryStatisticsItem) x).getSize() > 0)
-                    .toArray();
-
-            mViewer.setItemCount(mElements.length);
-        }
     }
 
     void setPrimaryColumnText(String text) {

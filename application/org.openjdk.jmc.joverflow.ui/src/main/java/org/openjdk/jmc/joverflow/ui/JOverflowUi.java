@@ -102,7 +102,6 @@ public class JOverflowUi extends Composite {
     }
 
     private void updateModel() {
-        // TODO: Don't do the update on the UI tread.
         if (mUpdatingModel) {
             return;
         }

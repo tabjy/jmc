@@ -1,23 +1,19 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
-import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.viewers.*;
-import org.eclipse.jface.viewers.deferred.IConcurrentModel;
-import org.eclipse.jface.viewers.deferred.IConcurrentModelListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.TableItem;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
-import org.openjdk.jmc.joverflow.ui.model.ClusterType;
-import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
-import org.openjdk.jmc.joverflow.ui.model.ModelListener;
-import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
+import org.openjdk.jmc.joverflow.ui.model.*;
+import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
 public class OverheadTypeViewer extends ContentViewer implements ModelListener {
 
-	private final MemoryStatisticsTableViewer<MemoryStatisticsItem> mTableViewer;
+	private final MemoryStatisticsTableViewer mTableViewer;
 	private MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
+	private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 	private boolean mAllIncluded = false;
 
 	public OverheadTypeViewer(Composite parent, int style) {
@@ -25,8 +21,9 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
 			mItems[t.ordinal()] = new MemoryStatisticsItem(t, 0, 0, 0);
 		}
 
-		mTableViewer = new MemoryStatisticsTableViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION, null);
+		mTableViewer = new MemoryStatisticsTableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION, null);
 		mTableViewer.setPrimaryColumnText("Object Selection");
+		mTableViewer.setInput(mInputModel);
 	}
 
 	@Override
@@ -80,8 +77,7 @@ public class OverheadTypeViewer extends ContentViewer implements ModelListener {
 
 	@Override
 	public void allIncluded() {
-        mTableViewer.setInput(mItems);
-//        mTableViewer.setItemCount(mItems.length);
+        mInputModel.setInput(mItems);
 		mAllIncluded = true;
 	}
 

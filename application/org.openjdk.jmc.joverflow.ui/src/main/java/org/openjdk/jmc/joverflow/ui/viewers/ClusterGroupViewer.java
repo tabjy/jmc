@@ -1,9 +1,6 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
-import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.viewers.*;
-import org.eclipse.jface.viewers.deferred.IConcurrentModel;
-import org.eclipse.jface.viewers.deferred.IConcurrentModelListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.MouseEvent;
@@ -15,6 +12,7 @@ import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.util.ColorIndexedArcAttributeProvider;
+import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -27,10 +25,11 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
 	private Label mTitle;
 	private PieChartViewer mPieChart;
 	private Group mFilterContainer;
-	private final MemoryStatisticsTableViewer<MemoryStatisticsItem> mTableViewer;
+	private final MemoryStatisticsTableViewer mTableViewer;
 
 	private String mQualifierName;
 	private final Map<Object, MemoryStatisticsItem> items = new HashMap<>();
+    private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 	private List<Predicate<ObjectCluster>> mFilters = new ArrayList<>();
 
 	private boolean mAllIncluded = false;
@@ -68,8 +67,11 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
 		Group classTableContainer = new Group(bottomLeftSash, SWT.NONE);
 		classTableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-		mTableViewer = new MemoryStatisticsTableViewer<>(classTableContainer, SWT.BORDER | SWT.FULL_SELECTION,
+		mTableViewer = new MemoryStatisticsTableViewer(classTableContainer, SWT.BORDER | SWT.FULL_SELECTION,
 				(e) -> mPieChart.getArcAttributeProvider().getColor(e));
+
+
+        mTableViewer.setInput(mInputModel);
 
 		mTableViewer.getTable().addMouseListener(new MouseListener() {
 			@Override
@@ -245,8 +247,7 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
 		Collection<MemoryStatisticsItem> values = items.values();
 
 		Instant then = Instant.now();
-        mTableViewer.setInput(values);
-//        mTableViewer.setItemCount(values.size());
+        mInputModel.setInput(values);
 		System.out.println("ClusterGroupViewer table took " + Duration.between(Instant.now(), then));
 
 		then = Instant.now();
