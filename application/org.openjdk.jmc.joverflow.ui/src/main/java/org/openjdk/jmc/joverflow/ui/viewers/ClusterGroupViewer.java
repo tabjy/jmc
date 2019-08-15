@@ -5,7 +5,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
@@ -19,7 +19,7 @@ import java.util.function.Predicate;
 
 public class ClusterGroupViewer extends BaseViewer {
 
-	private Composite mContainer;
+	private SashForm mContainer;
 	private Label mTitle;
 	private PieChartViewer mPieChart;
 	private Group mFilterContainer;
@@ -37,32 +37,54 @@ public class ClusterGroupViewer extends BaseViewer {
 
 		{
 			Group leftContainer = new Group(mContainer, SWT.NONE);
-			leftContainer.setLayout(new FillLayout(SWT.VERTICAL));
+			leftContainer.setLayout(new FormLayout());
 
 			mTitle = new Label(leftContainer, SWT.NONE);
+			{
+				FormData data = new FormData();
+				data.top = new FormAttachment(0, 10);
+				data.left = new FormAttachment(0, 10);
+				mTitle.setLayoutData(data);
+			}
 
-			mPieChart = new PieChartViewer(leftContainer, SWT.BORDER);
-			mPieChart.setContentProvider(ArrayContentProvider.getInstance());
-			ColorIndexedArcAttributeProvider provider = new ColorIndexedArcAttributeProvider() {
-				@Override
-				public int getWeight(Object element) {
-					return (int) ((MemoryStatisticsItem) element).getMemory();
+			{
+				SashForm container = new SashForm(leftContainer, SWT.VERTICAL);
+				{
+					FormData fd_sashForm = new FormData();
+					fd_sashForm.top = new FormAttachment(mTitle, 10);
+					fd_sashForm.right = new FormAttachment(100, -10);
+					fd_sashForm.bottom = new FormAttachment(100, -10);
+					fd_sashForm.left = new FormAttachment(0, 10);
+					container.setLayoutData(fd_sashForm);
 				}
-			};
-			provider.setMinimumArcAngle(5);
-			mPieChart.setArcAttributeProvider(provider);
 
-			mPieChart.setMinimumArcAngle(5);
-			mPieChart.getPieChart().setZoomRatio(1.2);
-			mPieChart.setComparator(new ViewerComparator() {
-				@Override
-				public int compare(Viewer viewer, Object e1, Object e2) {
-					return (int) (((MemoryStatisticsItem) e2).getMemory() - ((MemoryStatisticsItem) e1).getMemory());
-				}
-			});
+				mPieChart = new PieChartViewer(container, SWT.NONE);
+				mPieChart.setContentProvider(ArrayContentProvider.getInstance());
+				ColorIndexedArcAttributeProvider provider = new ColorIndexedArcAttributeProvider() {
+					@Override
+					public int getWeight(Object element) {
+						return (int) ((MemoryStatisticsItem) element).getMemory();
+					}
+				};
+				provider.setMinimumArcAngle(5);
+				mPieChart.setArcAttributeProvider(provider);
 
-			mFilterContainer = new Group(leftContainer, SWT.NONE);
-			mFilterContainer.setLayout(new FillLayout(SWT.VERTICAL));
+				mPieChart.setMinimumArcAngle(5);
+				mPieChart.getPieChart().setZoomRatio(1.2);
+				mPieChart.setComparator(new ViewerComparator() {
+					@Override
+					public int compare(Viewer viewer, Object e1, Object e2) {
+						return (int) (((MemoryStatisticsItem) e2).getMemory() - ((MemoryStatisticsItem) e1).getMemory());
+					}
+				});
+
+				mFilterContainer = new Group(container, SWT.NONE);
+				RowLayout layout = new RowLayout(SWT.VERTICAL);
+				layout.fill = true;
+				mFilterContainer.setLayout(layout);
+				
+				container.setWeights(new int[] {3, 2});
+			}
 
 		}
 
@@ -70,7 +92,7 @@ public class ClusterGroupViewer extends BaseViewer {
 			Group tableContainer = new Group(mContainer, SWT.NONE);
 			tableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.BORDER | SWT.FULL_SELECTION,
+			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.NONE,
 					(e) -> mPieChart.getArcAttributeProvider().getColor(e));
 			mTableViewer.setInput(mInputModel);
 
@@ -188,6 +210,8 @@ public class ClusterGroupViewer extends BaseViewer {
 				}
 			});
 		}
+		
+		mContainer.setWeights(new int[] {1, 2});
 	}
 
 	@Override

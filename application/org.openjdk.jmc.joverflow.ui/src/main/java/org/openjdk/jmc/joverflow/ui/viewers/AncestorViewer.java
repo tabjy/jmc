@@ -5,8 +5,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import org.openjdk.jmc.flightrecorder.ui.FlightRecorderUI;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
@@ -20,7 +19,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class AncestorViewer extends BaseViewer {
-    private Composite mContainer;
+    private SashForm mContainer;
     private PieChartViewer mPieChart;
     private Group mFilterContainer;
     private Text mInput;
@@ -41,91 +40,90 @@ public class AncestorViewer extends BaseViewer {
 
         {
             Group leftContainer = new Group(mContainer, SWT.NONE);
-            leftContainer.setLayout(new FillLayout(SWT.VERTICAL));
+            leftContainer.setLayout(new FormLayout());
 
-            Label ancestorReferrerLabel = new Label(leftContainer, SWT.NONE);
-            ancestorReferrerLabel.setText("Ancestor referrer");
-
-            mPieChart = new PieChartViewer(leftContainer, SWT.BORDER);
-            mPieChart.setContentProvider(ArrayContentProvider.getInstance());
-            ColorIndexedArcAttributeProvider provider = new ColorIndexedArcAttributeProvider() {
-                @Override
-                public int getWeight(Object element) {
-                    return (int) ((MemoryStatisticsItem) element).getMemory();
-                }
-            };
-            provider.setMinimumArcAngle(5);
-            mPieChart.setArcAttributeProvider(provider);
-            mPieChart.setMinimumArcAngle(5);
-            mPieChart.getPieChart().setZoomRatio(1.2);
-            mPieChart.setComparator(new ViewerComparator() {
-                @Override
-                public int compare(Viewer viewer, Object e1, Object e2) {
-                    return (int) (((MemoryStatisticsItem) e2).getMemory() - ((MemoryStatisticsItem) e1).getMemory());
-                }
-            });
-
-            Group prefixContainer = new Group(leftContainer, SWT.NONE);
-            prefixContainer.setLayout(new FillLayout(SWT.VERTICAL));
-
+            Label title = new Label(leftContainer, SWT.NONE);
+            title.setText("Ancestor referrer");
             {
-                Label label = new Label(prefixContainer, SWT.NONE);
-                label.setText("Ancestor prefix");
-
-                mInput = new Text(prefixContainer, SWT.BORDER);
-
-                Group buttonContainer = new Group(prefixContainer, SWT.NONE);
-                buttonContainer.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-                Button clear = new Button(buttonContainer, SWT.NONE);
-                Button update = new Button(buttonContainer, SWT.NONE);
-                clear.setText("Clear");
-                update.setText("Update");
-                clear.addMouseListener(new MouseListener() {
-                    @Override
-                    public void mouseDoubleClick(MouseEvent e) {
-                        // intentionally empty
-                    }
-
-                    @Override
-                    public void mouseDown(MouseEvent e) {
-                        mInput.setText("");
-                        updatePrefixFilter();
-                    }
-
-                    @Override
-                    public void mouseUp(MouseEvent e) {
-                        // intentionally empty
-                    }
-                });
-                update.addMouseListener(new MouseListener() {
-                    @Override
-                    public void mouseDoubleClick(MouseEvent e) {
-                        // intentionally empty
-                    }
-
-                    @Override
-                    public void mouseDown(MouseEvent e) {
-                        updatePrefixFilter();
-                    }
-
-                    @Override
-                    public void mouseUp(MouseEvent e) {
-                        // intentionally empty
-                    }
-                });
+                FormData data = new FormData();
+                data.top = new FormAttachment(0, 10);
+                data.left = new FormAttachment(0, 10);
+                title.setLayoutData(data);
 
             }
 
-            mFilterContainer = new Group(leftContainer, SWT.NONE);
-            mFilterContainer.setLayout(new FillLayout(SWT.VERTICAL));
+            {
+                Button update = new Button(leftContainer, SWT.NONE);
+                update.setText("Update");
+                update.addListener(SWT.Selection, event -> updatePrefixFilter());
+                {
+                    FormData data = new FormData();
+                    data.bottom = new FormAttachment(100, -10);
+                    data.right = new FormAttachment(100, -10);
+                    update.setLayoutData(data);
+                }
+
+                mInput = new Text(leftContainer, SWT.BORDER);
+                mInput.setMessage("Ancestor prefix");
+                mInput.addListener(SWT.Traverse, event -> {
+                    if(event.detail == SWT.TRAVERSE_RETURN){
+                        updatePrefixFilter();
+                    }
+                });
+                {
+
+                    FormData fd_text = new FormData();
+                    fd_text.right = new FormAttachment(update, -10);
+                    fd_text.bottom = new FormAttachment(update, 0, SWT.CENTER);
+                    fd_text.left = new FormAttachment(0, 10);
+                    mInput.setLayoutData(fd_text);
+                }
+
+                SashForm container = new SashForm(leftContainer, SWT.VERTICAL);
+                {
+                    FormData fd_sashForm = new FormData();
+                    fd_sashForm.bottom = new FormAttachment(update, -10);
+                    fd_sashForm.top = new FormAttachment(title, 10);
+                    fd_sashForm.right = new FormAttachment(100, -10);
+                    fd_sashForm.left = new FormAttachment(0, 10);
+                    container.setLayoutData(fd_sashForm);
+                }
+
+                mPieChart = new PieChartViewer(container, SWT.NONE);
+                mPieChart.setContentProvider(ArrayContentProvider.getInstance());
+                ColorIndexedArcAttributeProvider provider = new ColorIndexedArcAttributeProvider() {
+                    @Override
+                    public int getWeight(Object element) {
+                        return (int) ((MemoryStatisticsItem) element).getMemory();
+                    }
+                };
+                provider.setMinimumArcAngle(5);
+                mPieChart.setArcAttributeProvider(provider);
+                mPieChart.setMinimumArcAngle(5);
+                mPieChart.getPieChart().setZoomRatio(1.2);
+                mPieChart.setComparator(new ViewerComparator() {
+                    @Override
+                    public int compare(Viewer viewer, Object e1, Object e2) {
+                        return (int) (((MemoryStatisticsItem) e2).getMemory() - ((MemoryStatisticsItem) e1).getMemory());
+                    }
+                });
+
+                mFilterContainer = new Group(container, SWT.NONE);
+                RowLayout layout = new RowLayout(SWT.VERTICAL);
+                layout.fill = true;
+                mFilterContainer.setLayout(layout);
+                
+                container.setWeights(new int[] {3, 2});
+            }
+
+
         }
 
         {
             Group tableContainer = new Group(mContainer, SWT.NONE);
             tableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-            mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.BORDER | SWT.FULL_SELECTION,
+            mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.NONE,
                     (e) -> mPieChart.getArcAttributeProvider().getColor(e));
             mTableViewer.setInput(mInputModel);
 
@@ -183,6 +181,8 @@ public class AncestorViewer extends BaseViewer {
             });
         }
 
+        
+        mContainer.setWeights(new int[] {1, 2});
     }
 
     @Override

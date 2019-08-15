@@ -28,7 +28,7 @@ class PieChartViewer extends StructuredViewer {
     private List<Object> mInputs = new ArrayList<>();
 
     public PieChartViewer(Composite parent) {
-        this(parent, SWT.BORDER);
+        this(parent, SWT.NONE);
     }
 
     public PieChartViewer(Composite parent, int style) {
@@ -155,7 +155,7 @@ class PieChartViewer extends StructuredViewer {
         }
 
         while (mPieChart.getItemCount() < inputs.size()) {
-            new ArcItem(mPieChart, SWT.BORDER);
+            new ArcItem(mPieChart, SWT.NONE);
         }
 
         while (inputs.size() < mPieChart.getItemCount()) {
@@ -163,7 +163,7 @@ class PieChartViewer extends StructuredViewer {
         }
 
         if (otherAngle != 0) {
-            mOtherArc = new ArcItem(mPieChart, SWT.BORDER);
+            mOtherArc = new ArcItem(mPieChart, SWT.NONE);
         }
 
         int angleSum = 0;

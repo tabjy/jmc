@@ -42,7 +42,7 @@ public class JOverflowUi extends Composite {
                 Group topLeftContainer = new Group(vSashLeft, SWT.NONE);
                 topLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-                mOverheadTypeViewer = new OverheadTypeViewer(topLeftContainer, SWT.BORDER | SWT.FULL_SELECTION);
+                mOverheadTypeViewer = new OverheadTypeViewer(topLeftContainer, SWT.NONE);
                 mOverheadTypeViewer.addFilterChangedListener(viewer -> updateModel());
             }
 
@@ -51,7 +51,7 @@ public class JOverflowUi extends Composite {
                 Group bottomLeftContainer = new Group(vSashLeft, SWT.NONE);
                 bottomLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-                mClusterGroupViewer = new ClusterGroupViewer(bottomLeftContainer, SWT.BORDER | SWT.FULL_SELECTION);
+                mClusterGroupViewer = new ClusterGroupViewer(bottomLeftContainer, SWT.NONE);
                 mClusterGroupViewer.addFilterChangedListener(viewer -> updateModel());
             }
             vSashLeft.setWeights(new int[]{1, 1});
@@ -64,7 +64,7 @@ public class JOverflowUi extends Composite {
                 Group topRightContainer = new Group(vSashRight, SWT.NONE);
                 topRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-                mReferrerViewer = new ReferrerViewer(topRightContainer, SWT.BORDER | SWT.FULL_SELECTION);
+                mReferrerViewer = new ReferrerViewer(topRightContainer, SWT.NONE);
                 mReferrerViewer.addFilterChangedListener(viewer -> updateModel());
             }
 
@@ -73,7 +73,7 @@ public class JOverflowUi extends Composite {
                 Group bottomRightContainer = new Group(vSashRight, SWT.NONE);
                 bottomRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-                mAncestorViewer = new AncestorViewer(bottomRightContainer, SWT.BORDER | SWT.FULL_SELECTION);
+                mAncestorViewer = new AncestorViewer(bottomRightContainer, SWT.NONE);
                 mAncestorViewer.addFilterChangedListener(viewer -> updateModel());
             }
             vSashRight.setWeights(new int[]{1, 1});
