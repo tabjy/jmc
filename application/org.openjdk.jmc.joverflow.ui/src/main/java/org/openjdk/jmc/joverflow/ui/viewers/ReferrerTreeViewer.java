@@ -20,7 +20,7 @@ import java.util.function.Function;
 // ReferrerTreeViewer is actually a TableViewer with its tree-like content
 class ReferrerTreeViewer extends TableViewer {
 
-    private long mTotalMemory;
+    private long mHeapSize;
 
     private TreeViewerColumnComparator mActiveColumnComparator;
     private DeferredContentProvider mContentProvider;
@@ -39,12 +39,12 @@ class ReferrerTreeViewer extends TableViewer {
                 false, true);
 
         createTreeViewerColumn("Memory KiB",
-                model -> String.format("%d (%d%%)", model.getMemory() / 1024, model.getMemory() * 100 / mTotalMemory),
+                model -> String.format("%d (%d%%)", model.getMemory() / 1024, model.getMemory() * 100 / mHeapSize),
                 (lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()),
                 true, false);
 
         createTreeViewerColumn("Overhead KiB",
-                model -> String.format("%d (%d%%)", model.getOvhd() / 1024, model.getOvhd() * 100 / mTotalMemory),
+                model -> String.format("%d (%d%%)", model.getOvhd() / 1024, model.getOvhd() * 100 / mHeapSize),
                 (lhs, rhs) -> (int) (lhs.getOvhd() - rhs.getOvhd()),
                 false, false);
 
@@ -107,64 +107,8 @@ class ReferrerTreeViewer extends TableViewer {
         cmp.init(this, column, sort);
     }
 
-    private class ReferrerItemContentProvider implements ITreeContentProvider {
-
-        private Map<ReferrerItem, List<ReferrerItem>> parentToChildren = new HashMap<>();
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Object[] getElements(Object inputElement) {
-            List<ReferrerItem> items = (List<ReferrerItem>) inputElement;
-            if (items.isEmpty()) {
-                return new Object[0];
-            }
-
-            if (items.get(0).isBranch()) {
-                return items.toArray();
-            }
-
-            ReferrerItem parent = items.get(0);
-
-            for (int i = 1; i < items.size(); i++) {
-                ReferrerItem item = items.get(i);
-                if (!item.isBranch()) {
-                    parentToChildren.putIfAbsent(parent, new ArrayList<>());
-                    parentToChildren.get(parent).add(item);
-
-                    parent = item;
-                }
-            }
-
-            return new Object[]{items.get(0)};
-        }
-
-        @Override
-        public Object[] getChildren(Object parentElement) {
-            ReferrerItem item = (ReferrerItem) parentElement;
-            if (item.isBranch()) {
-                return new Object[0];
-            }
-
-            return parentToChildren.get(item).toArray();
-        }
-
-        @Override
-        public Object getParent(Object element) {
-            return null;
-        }
-
-        @Override
-        public boolean hasChildren(Object element) {
-            if (((ReferrerItem) element).isBranch()) {
-                return false;
-            }
-
-            return parentToChildren.get(element) != null;
-        }
-    }
-
-    void setTotalMemory(long memory) {
-        mTotalMemory = memory;
+    void setHeapSize(long size) {
+        mHeapSize = size;
     }
 
     abstract class TreeViewerColumnComparator implements Comparator {

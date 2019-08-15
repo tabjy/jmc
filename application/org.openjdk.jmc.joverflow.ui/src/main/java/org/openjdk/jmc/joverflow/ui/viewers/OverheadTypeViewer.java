@@ -1,109 +1,120 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.TableItem;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.*;
 import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
-public class OverheadTypeViewer extends ContentViewer implements ModelListener {
+public class OverheadTypeViewer extends BaseViewer {
 
-	private final MemoryStatisticsTableViewer mTableViewer;
-	private MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
-	private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
-	private boolean mAllIncluded = false;
+    private final MemoryStatisticsTableViewer mTableViewer;
 
-	public OverheadTypeViewer(Composite parent, int style) {
-		for (ClusterType t : ClusterType.values()) {
-			mItems[t.ordinal()] = new MemoryStatisticsItem(t, 0, 0, 0);
-		}
+    private MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
+    private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
+    private ClusterType mCurrentType = ClusterType.ALL_OBJECTS;
 
-		mTableViewer = new MemoryStatisticsTableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION, null);
-		mTableViewer.setPrimaryColumnText("Object Selection");
-		mTableViewer.setInput(mInputModel);
-	}
+    private boolean mAllIncluded = false;
 
-	@Override
-	public Control getControl() {
-		return mTableViewer.getControl();
-	}
+    public OverheadTypeViewer(Composite parent, int style) {
+        for (ClusterType t : ClusterType.values()) {
+            mItems[t.ordinal()] = new MemoryStatisticsItem(t, 0, 0, 0);
+        }
 
-	@Override
-	public void addSelectionChangedListener(ISelectionChangedListener listener) {
-		mTableViewer.addSelectionChangedListener(listener);
-	}
+        mTableViewer = new MemoryStatisticsTableViewer(parent, style | SWT.FULL_SELECTION, null);
+        mTableViewer.setPrimaryColumnText("Object Selection");
+        mTableViewer.setInput(mInputModel);
 
-	@Override
-	public ISelection getSelection() {
-		return mTableViewer.getSelection();
-	}
+        mTableViewer.addSelectionChangedListener(event -> setCurrentType(getSelectedType()));
+    }
 
-	@Override
-	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
-		mTableViewer.removeSelectionChangedListener(listener);
-	}
+    @Override
+    public Control getControl() {
+        return mTableViewer.getControl();
+    }
 
-	@Override
-	public void setSelection(ISelection selection) {
-		mTableViewer.setSelection(selection);
-	}
+    @Override
+    public void refresh() {
+        mTableViewer.refresh();
+    }
 
-	@Override
-	public void refresh() {
-		mTableViewer.refresh();
-	}
+    @Override
+    public ISelection getSelection() {
+        return mTableViewer.getSelection();
+    }
 
-	@Override
-	public void setSelection(ISelection selection, boolean reveal) {
-		mTableViewer.setSelection(selection, reveal);
-	}
+    @Override
+    public void setSelection(ISelection selection, boolean reveal) {
+        mTableViewer.setSelection(selection, reveal);
+    }
 
-	@Override
-	public void include(ObjectCluster oc, RefChainElement ref) {
-		if (mAllIncluded) {
-			for (MemoryStatisticsItem item : mItems) {
-				item.reset();
-			}
-			mAllIncluded = false;
-		}
+    @Override
+    public void include(ObjectCluster oc, RefChainElement ref) {
+        if (mAllIncluded) {
+            for (MemoryStatisticsItem item : mItems) {
+                item.reset();
+            }
+            mAllIncluded = false;
+        }
 
-		if (oc.getType() != null) {
-			mItems[oc.getType().ordinal()].addObjectCluster(oc);
-		}
-	}
+        if (oc.getType() != null) {
+            mItems[oc.getType().ordinal()].addObjectCluster(oc);
+        }
+    }
 
-	@Override
-	public void allIncluded() {
+    @Override
+    public void allIncluded() {
         mInputModel.setInput(mItems);
-		mAllIncluded = true;
-	}
+        mAllIncluded = true;
+    }
 
-	public ClusterType getCurrentType() {
-		ISelection selection = getSelection();
-		if (selection.isEmpty() || !(selection instanceof StructuredSelection)) {
-			return ClusterType.ALL_OBJECTS;
-		}
-		ClusterType type = (ClusterType) ((MemoryStatisticsItem) ((StructuredSelection) getSelection())
-				.getFirstElement()).getId();
-		if (type == null) {
-			return ClusterType.ALL_OBJECTS;
-		}
+    @Override
+    public void setHeapSize(long size) {
+        super.setHeapSize(size);
 
-		return type;
-	}
+        mTableViewer.setHeapSize(size);
+    }
 
-	public void setTotalMemory(long memory) {
-		mTableViewer.setTotalMemory(memory);
-	}
+    public ClusterType getCurrentType() {
+        return mCurrentType;
+    }
 
-	public void reset() {
-		for (TableItem item : mTableViewer.getTable().getItems()) {
-			if (ClusterType.ALL_OBJECTS == ((MemoryStatisticsItem) item.getData()).getId()) {
-				mTableViewer.getTable().setSelection(item);
-			}
-		}
-	}
+    public void setCurrentType(ClusterType type) {
+        ClusterType oldType = mCurrentType;
+        mCurrentType = type;
+
+        if (oldType != mCurrentType) {
+            notifyFilterChangedListeners();
+        }
+    }
+
+    private ClusterType getSelectedType() {
+        ClusterType type = ClusterType.ALL_OBJECTS;
+        if (!getSelection().isEmpty()) {
+            if (getSelection() instanceof IStructuredSelection) {
+                IStructuredSelection selection = (IStructuredSelection) getSelection();
+                MemoryStatisticsItem item = ((MemoryStatisticsItem) selection.getFirstElement());
+                if (item != null && item.getId() != null) {
+                    type = (ClusterType) item.getId();
+                }
+            }
+        }
+
+        return type;
+    }
+
+    @Override
+    public boolean filter(ObjectCluster oc) {
+        return getCurrentType() == oc.getType();
+    }
+
+    @Override
+    public void reset() {
+        setCurrentType(ClusterType.ALL_OBJECTS);
+    }
 }

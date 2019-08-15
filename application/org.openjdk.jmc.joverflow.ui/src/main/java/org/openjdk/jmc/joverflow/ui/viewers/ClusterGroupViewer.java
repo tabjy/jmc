@@ -9,19 +9,17 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.*;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
-import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.util.ColorIndexedArcAttributeProvider;
 import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class ClusterGroupViewer extends ContentViewer implements ModelListener {
+public class ClusterGroupViewer extends BaseViewer {
 
+	private Composite mContainer;
 	private Label mTitle;
 	private PieChartViewer mPieChart;
 	private Group mFilterContainer;
@@ -29,199 +27,189 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
 
 	private String mQualifierName;
 	private final Map<Object, MemoryStatisticsItem> items = new HashMap<>();
-    private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
+	private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 	private List<Predicate<ObjectCluster>> mFilters = new ArrayList<>();
 
 	private boolean mAllIncluded = false;
 
 	public ClusterGroupViewer(Composite parent, int style) {
-		SashForm bottomLeftSash = new SashForm(parent, SWT.NONE);
-		Group pieChartContainer = new Group(bottomLeftSash, SWT.NONE);
-		pieChartContainer.setLayout(new FillLayout(SWT.VERTICAL));
+		mContainer = new SashForm(parent, style);
 
-		mTitle = new Label(pieChartContainer, SWT.NONE);
+		{
+			Group leftContainer = new Group(mContainer, SWT.NONE);
+			leftContainer.setLayout(new FillLayout(SWT.VERTICAL));
 
-		mPieChart = new PieChartViewer(pieChartContainer, SWT.BORDER);
-		mPieChart.setContentProvider(ArrayContentProvider.getInstance());
-		ColorIndexedArcAttributeProvider provider = new ColorIndexedArcAttributeProvider() {
-			@Override
-			public int getWeight(Object element) {
-				return (int) ((MemoryStatisticsItem) element).getMemory();
-			}
-		};
-		provider.setMinimumArcAngle(5);
-		mPieChart.setArcAttributeProvider(provider);
+			mTitle = new Label(leftContainer, SWT.NONE);
 
-		mPieChart.setMinimumArcAngle(5);
-		mPieChart.getPieChart().setZoomRatio(1.2);
-		mPieChart.setComparator(new ViewerComparator() {
-			@Override
-			public int compare(Viewer viewer, Object e1, Object e2) {
-				return (int) (((MemoryStatisticsItem) e2).getMemory() - ((MemoryStatisticsItem) e1).getMemory());
-			}
-		});
-
-		mFilterContainer = new Group(pieChartContainer, SWT.NONE);
-		mFilterContainer.setLayout(new FillLayout(SWT.VERTICAL));
-
-		Group classTableContainer = new Group(bottomLeftSash, SWT.NONE);
-		classTableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
-
-		mTableViewer = new MemoryStatisticsTableViewer(classTableContainer, SWT.BORDER | SWT.FULL_SELECTION,
-				(e) -> mPieChart.getArcAttributeProvider().getColor(e));
-
-
-        mTableViewer.setInput(mInputModel);
-
-		mTableViewer.getTable().addMouseListener(new MouseListener() {
-			@Override
-			public void mouseDoubleClick(MouseEvent e) {
-
-			}
-
-			@Override
-			public void mouseDown(MouseEvent e) {
-				if (mTableViewer.getSelection().isEmpty()) {
-					return;
+			mPieChart = new PieChartViewer(leftContainer, SWT.BORDER);
+			mPieChart.setContentProvider(ArrayContentProvider.getInstance());
+			ColorIndexedArcAttributeProvider provider = new ColorIndexedArcAttributeProvider() {
+				@Override
+				public int getWeight(Object element) {
+					return (int) ((MemoryStatisticsItem) element).getMemory();
 				}
-				IStructuredSelection selection = (IStructuredSelection) mTableViewer.getSelection();
-				MemoryStatisticsItem item = (MemoryStatisticsItem) selection.getFirstElement();
-				if (e.button == 1) { // left click
-					String qualifierName = mQualifierName;
-					String itemName = item.getId().toString();
-					boolean excluded = false;
-					Predicate<ObjectCluster> filter = (oc) -> {
-						if (qualifierName == null) {
-							return itemName.equals(oc.getClassName()) ^ excluded;
-						}
+			};
+			provider.setMinimumArcAngle(5);
+			mPieChart.setArcAttributeProvider(provider);
 
-						if (oc.getQualifier() == null) {
-							return true;
-						}
-
-						return itemName.equals(oc.getQualifier()) ^ excluded;
-					};
-					mFilters.add(filter);
-
-					Button button = new Button(mFilterContainer, SWT.NONE);
-					button.setText(
-							(mQualifierName == null ? "Class" : mQualifierName) + " = " + item.getId().toString());
-					button.addMouseListener(new MouseListener() {
-						@Override
-						public void mouseDoubleClick(MouseEvent e) {
-							// intentionally empty
-						}
-
-						@Override
-						public void mouseDown(MouseEvent e) {
-							mFilters.remove(filter);
-							button.dispose();
-
-							// TODO: investigate why layout is not auto updated
-							mFilterContainer.layout(true, true);
-							mTableViewer.getTable().setFocus();
-							mTableViewer.setSelection(StructuredSelection.EMPTY, true);
-						}
-
-						@Override
-						public void mouseUp(MouseEvent e) {
-							// intentionally empty
-						}
-					});
-
-					// TODO: investigate why layout is not auto updated
-					mFilterContainer.layout(true, true);
-				} else if (e.button == 3) { // right click
-					String qualifierName = mQualifierName;
-					String itemName = item.getId().toString();
-					boolean excluded = true;
-					Predicate<ObjectCluster> filter = (oc) -> {
-						if (qualifierName == null) {
-							return itemName.equals(oc.getClassName()) ^ excluded;
-						}
-
-						if (oc.getQualifier() == null) {
-							return true;
-						}
-
-						return itemName.equals(oc.getQualifier()) ^ excluded;
-					};
-					mFilters.add(filter);
-
-					Button button = new Button(mFilterContainer, SWT.NONE);
-					button.setText(
-							(mQualifierName == null ? "Class" : mQualifierName) + " = " + item.getId().toString());
-					button.addMouseListener(new MouseListener() {
-						@Override
-						public void mouseDoubleClick(MouseEvent e) {
-							// intentionally empty
-						}
-
-						@Override
-						public void mouseDown(MouseEvent e) {
-							mFilters.remove(filter);
-							button.dispose();
-
-							// TODO: investigate why layout is not auto updated
-							mFilterContainer.layout(true, true);
-							mTableViewer.getTable().setFocus();
-							mTableViewer.setSelection(StructuredSelection.EMPTY, true);
-						}
-
-						@Override
-						public void mouseUp(MouseEvent e) {
-							// intentionally empty
-						}
-					});
-
-					// TODO: investigate why layout is not auto updated
-					mFilterContainer.layout(true, true);
+			mPieChart.setMinimumArcAngle(5);
+			mPieChart.getPieChart().setZoomRatio(1.2);
+			mPieChart.setComparator(new ViewerComparator() {
+				@Override
+				public int compare(Viewer viewer, Object e1, Object e2) {
+					return (int) (((MemoryStatisticsItem) e2).getMemory() - ((MemoryStatisticsItem) e1).getMemory());
 				}
-			}
+			});
 
-			@Override
-			public void mouseUp(MouseEvent e) {
+			mFilterContainer = new Group(leftContainer, SWT.NONE);
+			mFilterContainer.setLayout(new FillLayout(SWT.VERTICAL));
 
-			}
-		});
+		}
 
-		mTableViewer.addSelectionChangedListener((event) -> {
-			if (event.getStructuredSelection().isEmpty()) {
-				return;
-			}
-			MemoryStatisticsItem item = (MemoryStatisticsItem) event.getStructuredSelection().getFirstElement();
+		{
+			Group tableContainer = new Group(mContainer, SWT.NONE);
+			tableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-		});
+			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.BORDER | SWT.FULL_SELECTION,
+					(e) -> mPieChart.getArcAttributeProvider().getColor(e));
+			mTableViewer.setInput(mInputModel);
+
+			mTableViewer.getTable().addMouseListener(new MouseListener() {
+				@Override
+				public void mouseDoubleClick(MouseEvent e) {
+
+				}
+
+				@Override
+				public void mouseDown(MouseEvent e) {
+					if (mTableViewer.getSelection().isEmpty()) {
+						return;
+					}
+					IStructuredSelection selection = (IStructuredSelection) mTableViewer.getSelection();
+					MemoryStatisticsItem item = (MemoryStatisticsItem) selection.getFirstElement();
+					if (e.button == 1) { // left click
+						String qualifierName = mQualifierName;
+						String itemName = item.getId().toString();
+						boolean excluded = false;
+						Predicate<ObjectCluster> filter = (oc) -> {
+							if (qualifierName == null) {
+								return itemName.equals(oc.getClassName()) ^ excluded;
+							}
+
+							if (oc.getQualifier() == null) {
+								return true;
+							}
+
+							return itemName.equals(oc.getQualifier()) ^ excluded;
+						};
+						mFilters.add(filter);
+
+						Button button = new Button(mFilterContainer, SWT.NONE);
+						button.setText(
+								(mQualifierName == null ? "Class" : mQualifierName) + " = " + item.getId().toString());
+						button.addMouseListener(new MouseListener() {
+							@Override
+							public void mouseDoubleClick(MouseEvent e) {
+								// no op
+							}
+
+							@Override
+							public void mouseDown(MouseEvent e) {
+								mFilters.remove(filter);
+								button.dispose();
+
+								// TODO: investigate why layout is not auto updated
+								mFilterContainer.layout(true, true);
+								notifyFilterChangedListeners();
+							}
+
+							@Override
+							public void mouseUp(MouseEvent e) {
+								// no op
+							}
+						});
+
+						// TODO: investigate why layout is not auto updated
+						mFilterContainer.layout(true, true);
+					} else if (e.button == 3) { // right click
+						String qualifierName = mQualifierName;
+						String itemName = item.getId().toString();
+						boolean excluded = true;
+						Predicate<ObjectCluster> filter = (oc) -> {
+							if (qualifierName == null) {
+								return itemName.equals(oc.getClassName()) ^ excluded;
+							}
+
+							if (oc.getQualifier() == null) {
+								return true;
+							}
+
+							return itemName.equals(oc.getQualifier()) ^ excluded;
+						};
+						mFilters.add(filter);
+
+						Button button = new Button(mFilterContainer, SWT.NONE);
+						button.setText(
+								(mQualifierName == null ? "Class" : mQualifierName) + " = " + item.getId().toString());
+						button.addMouseListener(new MouseListener() {
+							@Override
+							public void mouseDoubleClick(MouseEvent e) {
+								// no op
+							}
+
+							@Override
+							public void mouseDown(MouseEvent e) {
+								mFilters.remove(filter);
+								button.dispose();
+
+								// TODO: investigate why layout is not auto updated
+								mFilterContainer.layout(true, true);
+								notifyFilterChangedListeners();
+							}
+
+							@Override
+							public void mouseUp(MouseEvent e) {
+								// no op
+							}
+						});
+
+						// TODO: investigate why layout is not auto updated
+						mFilterContainer.layout(true, true);
+					} else {
+						return;
+					}
+
+					notifyFilterChangedListeners();
+				}
+
+				@Override
+				public void mouseUp(MouseEvent e) {
+					// no op
+				}
+			});
+		}
 	}
 
 	@Override
 	public Control getControl() {
-		return mTableViewer.getControl();
-	}
-
-	@Override
-	public void addSelectionChangedListener(ISelectionChangedListener listener) {
-		mTableViewer.addSelectionChangedListener(listener);
+		return mContainer;
 	}
 
 	@Override
 	public ISelection getSelection() {
-		return null;
-	}
-
-	@Override
-	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
-		mTableViewer.removeSelectionChangedListener(listener);
+		return mTableViewer.getSelection();
 	}
 
 	@Override
 	public void refresh() {
 		mTableViewer.refresh();
+		mPieChart.refresh();
 	}
 
 	@Override
 	public void setSelection(ISelection selection, boolean reveal) {
 		mTableViewer.setSelection(selection, reveal);
+		mPieChart.setSelection(selection, reveal);
 	}
 
 	@Override
@@ -246,16 +234,10 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
 	public void allIncluded() {
 		Collection<MemoryStatisticsItem> values = items.values();
 
-		Instant then = Instant.now();
-        mInputModel.setInput(values);
-		System.out.println("ClusterGroupViewer table took " + Duration.between(Instant.now(), then));
-
-		then = Instant.now();
+		mInputModel.setInput(values);
 		mPieChart.setInput(values);
-		System.out.println("ClusterGroupViewer pie chart took " + Duration.between(Instant.now(), then));
-		mAllIncluded = true;
 
-		System.out.println("ClusterGroupViewer has " + items.values().size() + " entries");
+		mAllIncluded = true;
 	}
 
 	public void setQualifierName(String qualifierName) {
@@ -265,19 +247,21 @@ public class ClusterGroupViewer extends ContentViewer implements ModelListener {
 		mTableViewer.setPrimaryColumnText(text);
 	}
 
-	public void setTotalMemory(long memory) {
-		mTableViewer.setTotalMemory(memory);
+	public void setHeapSize(long size) {
+		mTableViewer.setHeapSize(size);
 	}
 
-	public Predicate<ObjectCluster> getFilter() {
-		Predicate<ObjectCluster> res = oc -> true;
+	@Override
+	public boolean filter(ObjectCluster oc) {
+		Predicate<ObjectCluster> res = in -> true;
 		for (Predicate<ObjectCluster> filter : mFilters) {
 			res = res.and(filter);
 		}
 
-		return res;
+		return res.test(oc);
 	}
 
+	@Override
 	public void reset() {
 		mFilters.clear();
 		for (Control filter : mFilterContainer.getChildren()) {

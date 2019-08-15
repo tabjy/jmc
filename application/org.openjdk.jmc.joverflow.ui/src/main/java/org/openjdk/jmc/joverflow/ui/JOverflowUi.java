@@ -9,12 +9,8 @@ import org.openjdk.jmc.joverflow.ui.model.ClusterType;
 import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.model.ReferenceChain;
-import org.openjdk.jmc.joverflow.ui.viewers.AncestorViewer;
-import org.openjdk.jmc.joverflow.ui.viewers.ClusterGroupViewer;
-import org.openjdk.jmc.joverflow.ui.viewers.OverheadTypeViewer;
-import org.openjdk.jmc.joverflow.ui.viewers.ReferrerViewer;
+import org.openjdk.jmc.joverflow.ui.viewers.*;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,7 +19,6 @@ import java.util.List;
 public class JOverflowUi extends Composite {
 
     private Collection<ReferenceChain> mModel;
-    private long mTotalMemory;
 
     private final OverheadTypeViewer mOverheadTypeViewer; // left-top viewer
     private final ClusterGroupViewer mClusterGroupViewer; // left-bottom viewer
@@ -32,7 +27,7 @@ public class JOverflowUi extends Composite {
 
     private final List<ModelListener> mModelListeners = new ArrayList<>();
 
-    private boolean mUpdatingModel;
+    private boolean mIsUpdatingModel;
 
     public JOverflowUi(Composite parent, int style) {
         super(parent, style);
@@ -48,7 +43,7 @@ public class JOverflowUi extends Composite {
                 topLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mOverheadTypeViewer = new OverheadTypeViewer(topLeftContainer, SWT.BORDER | SWT.FULL_SELECTION);
-                mOverheadTypeViewer.addSelectionChangedListener((event) -> updateModel());
+                mOverheadTypeViewer.addFilterChangedListener(viewer -> updateModel());
             }
 
             // Cluster Group Viewer (bottom-left)
@@ -57,7 +52,7 @@ public class JOverflowUi extends Composite {
                 bottomLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mClusterGroupViewer = new ClusterGroupViewer(bottomLeftContainer, SWT.BORDER | SWT.FULL_SELECTION);
-                mClusterGroupViewer.addSelectionChangedListener((event) -> updateModel());
+                mClusterGroupViewer.addFilterChangedListener(viewer -> updateModel());
             }
             vSashLeft.setWeights(new int[]{1, 1});
         }
@@ -70,7 +65,7 @@ public class JOverflowUi extends Composite {
                 topRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mReferrerViewer = new ReferrerViewer(topRightContainer, SWT.BORDER | SWT.FULL_SELECTION);
-                mReferrerViewer.addSelectionChangedListener((event) -> updateModel());
+                mReferrerViewer.addFilterChangedListener(viewer -> updateModel());
             }
 
             // Ancestor Viewer (bottom-right)
@@ -79,7 +74,7 @@ public class JOverflowUi extends Composite {
                 bottomRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mAncestorViewer = new AncestorViewer(bottomRightContainer, SWT.BORDER | SWT.FULL_SELECTION);
-                mAncestorViewer.addSelectionChangedListener((event) -> updateModel());
+                mAncestorViewer.addFilterChangedListener(viewer -> updateModel());
             }
             vSashRight.setWeights(new int[]{1, 1});
         }
@@ -97,16 +92,20 @@ public class JOverflowUi extends Composite {
                 }
             }
         }
-        mTotalMemory = heapSize;
+        mOverheadTypeViewer.setHeapSize(heapSize);
+        mReferrerViewer.setHeapSize(heapSize);
+        mClusterGroupViewer.setHeapSize(heapSize);
+        mAncestorViewer.setHeapSize(heapSize);
         updateModel();
     }
 
     private void updateModel() {
-        if (mUpdatingModel) {
+        if (mIsUpdatingModel) {
+            // skip updating if busy
             return;
         }
 
-        mUpdatingModel = true;
+        mIsUpdatingModel = true;
         Instant then = Instant.now();
 
         ClusterType currentType = mOverheadTypeViewer.getCurrentType();
@@ -116,15 +115,16 @@ public class JOverflowUi extends Composite {
         for (ReferenceChain chain : mModel) {
             RefChainElement rce = chain.getReferenceChain();
             // Check filters for reference chains
-            if (mReferrerViewer.getFilter().test(rce) && mAncestorViewer.getFilter().test(rce)) {
+            if (mReferrerViewer.filter(rce) && mAncestorViewer.filter(rce)) {
                 // Loop all object clusters
                 for (ObjectCluster oc : chain) {
                     // Check filters for object clusters
-                    if (mClusterGroupViewer.getFilter().test(oc)) {
+                    if (mClusterGroupViewer.filter(oc)) {
+//                    if (mClusterGroupViewer.getFilter().test(oc)) {
                         // Add object cluster to type-viewer regardless of type
                         mOverheadTypeViewer.include(oc, rce);
                         // Add type object cluster matches current type and add to all other viewers
-                        if (oc.getType() == currentType) {
+                        if (mOverheadTypeViewer.filter(oc)) {
                             mReferrerViewer.include(oc, chain.getReferenceChain());
                             mClusterGroupViewer.include(oc, chain.getReferenceChain());
                             mAncestorViewer.include(oc, chain.getReferenceChain());
@@ -138,52 +138,27 @@ public class JOverflowUi extends Composite {
             }
         }
 
-        System.out.println("building model took: " + Duration.between(Instant.now(), then).toString());
-
         // Notify all that update is done
-        mOverheadTypeViewer.setTotalMemory(mTotalMemory);
-        mReferrerViewer.setTotalMemory(mTotalMemory);
-        mClusterGroupViewer.setTotalMemory(mTotalMemory);
-        mAncestorViewer.setTotalMemory(mTotalMemory);
-        
-        Instant then2 = Instant.now();
-        
-        then = Instant.now();
         mReferrerViewer.allIncluded();
-        System.out.println("rendering ReferrerViewer took: " + Duration.between(Instant.now(), then).toString());
-        
-        then = Instant.now();
         mClusterGroupViewer.allIncluded();
-        System.out.println("rendering ClusterGroupViewer took: " + Duration.between(Instant.now(), then).toString());
-               
-        then = Instant.now();
         mAncestorViewer.allIncluded();
-        System.out.println("rendering AncestorViewer took: " + Duration.between(Instant.now(), then).toString());
-        
-        then = Instant.now();
         mOverheadTypeViewer.allIncluded();
-        System.out.println("rendering OverheadTypeViewer took: " + Duration.between(Instant.now(), then).toString());
-
-        then = Instant.now();
         for (ModelListener l : mModelListeners) {
             l.allIncluded();
         }
-        System.out.println("rendering others took: " + Duration.between(Instant.now(), then).toString());
 
-        System.out.println("rendering UI took: " + Duration.between(Instant.now(), then2).toString());
-
-        mUpdatingModel = false;
+        mIsUpdatingModel = false;
     }
 
     void reset() {
-        mUpdatingModel = true;
+        mIsUpdatingModel = true;
 
         mOverheadTypeViewer.reset();
         mReferrerViewer.reset();
         mClusterGroupViewer.reset();
         mAncestorViewer.reset();
 
-        mUpdatingModel = false;
+        mIsUpdatingModel = false;
         updateModel();
     }
 

@@ -7,29 +7,23 @@ import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
-import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItemBuilder;
 import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.function.Predicate;
 
-public class ReferrerViewer extends ContentViewer implements ModelListener {
+public class ReferrerViewer extends BaseViewer {
 
     private ReferrerTreeViewer mTreeViewer;
     private ReferrerItemBuilder mItemBuilder;
     private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 
-    private Collection<ISelectionChangedListener> mListeners = new HashSet<>();
     private ReferrerItem mSelectedItem;
 
     public ReferrerViewer(Composite parent, int style) {
-        mTreeViewer = new ReferrerTreeViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
+        mTreeViewer = new ReferrerTreeViewer(parent, style | SWT.FULL_SELECTION);
         mTreeViewer.setInput(mInputModel);
 
         mTreeViewer.addSelectionChangedListener(event -> {
@@ -38,13 +32,13 @@ public class ReferrerViewer extends ContentViewer implements ModelListener {
             }
             mSelectedItem = (ReferrerItem) event.getStructuredSelection().getFirstElement();
 
-            notifySelectionChanged();
+            notifyFilterChangedListeners();
         });
 
         mTreeViewer.getControl().addMouseListener(new MouseListener() {
             @Override
             public void mouseDoubleClick(MouseEvent e) {
-                // intentionally empty
+                // no op
             }
 
             @Override
@@ -56,22 +50,29 @@ public class ReferrerViewer extends ContentViewer implements ModelListener {
 
             @Override
             public void mouseUp(MouseEvent e) {
-                // intentionally empty
+                // no op
             }
         });
     }
 
     @Override
-    public void allIncluded() {
-        if (mItemBuilder == null) {
-            mInputModel.setInput(null);
-        } else {
-        	List<ReferrerItem> list = mItemBuilder.buildReferrerList();
-            mInputModel.setInput(list.toArray());
-            mItemBuilder = null;
-            
-            System.out.println("ReferrerViewer has " + list.size() + " entries");
-        }
+    public Control getControl() {
+        return mTreeViewer.getControl();
+    }
+
+    @Override
+    public ISelection getSelection() {
+        return mTreeViewer.getSelection();
+    }
+
+    @Override
+    public void refresh() {
+        mTreeViewer.refresh();
+    }
+
+    @Override
+    public void setSelection(ISelection selection, boolean reveal) {
+        mTreeViewer.setSelection(selection, reveal);
     }
 
     @Override
@@ -83,66 +84,35 @@ public class ReferrerViewer extends ContentViewer implements ModelListener {
         }
     }
 
+    @Override
+    public void allIncluded() {
+        if (mItemBuilder == null) {
+            mInputModel.setInput(null);
+        } else {
+            List<ReferrerItem> list = mItemBuilder.buildReferrerList();
+            mInputModel.setInput(list.toArray());
+            mItemBuilder = null;
+        }
+    }
+
+    @Override
+    public void setHeapSize(long size) {
+        super.setHeapSize(size);
+
+        mTreeViewer.setHeapSize(size);
+    }
+
+    @Override
     public void reset() {
         mSelectedItem = null;
-        notifySelectionChanged();
+        notifyFilterChangedListeners();
     }
 
     @Override
-    public Control getControl() {
-        return mTreeViewer.getControl();
-    }
-
-    @Override
-    public void addSelectionChangedListener(ISelectionChangedListener listener) {
-        mListeners.add(listener);
-    }
-
-    @Override
-    public ISelection getSelection() {
+    public boolean filter(RefChainElement rce) {
         if (mSelectedItem == null) {
-            return StructuredSelection.EMPTY;
+            return true;
         }
-
-        return new StructuredSelection(mSelectedItem);
-    }
-
-    @Override
-    public void removeSelectionChangedListener(ISelectionChangedListener listener) {
-        mListeners.remove(listener);
-    }
-
-    @Override
-    public void refresh() {
-        mTreeViewer.refresh();
-    }
-
-    @Override
-    public void setSelection(ISelection selection, boolean reveal) {
-        mSelectedItem = (ReferrerItem) ((StructuredSelection) getSelection()).getFirstElement();
-        mTreeViewer.setSelection(selection, reveal);
-
-        notifySelectionChanged();
-    }
-
-    private void notifySelectionChanged() {
-        SelectionChangedEvent e = new SelectionChangedEvent(this, getSelection());
-        for (ISelectionChangedListener l : mListeners) {
-            l.selectionChanged(e);
-        }
-    }
-
-    public Predicate<RefChainElement> getFilter() {
-        ISelection selection = getSelection();
-        if (selection.isEmpty()) {
-            return refChainElement -> true;
-        }
-
-        ReferrerItem item = (ReferrerItem) ((StructuredSelection) getSelection()).getFirstElement();
-        return item::check;
-    }
-    
-    public void setTotalMemory(long memory) {
-    	mTreeViewer.setTotalMemory(memory);
+        return mSelectedItem.check(rce);
     }
 }

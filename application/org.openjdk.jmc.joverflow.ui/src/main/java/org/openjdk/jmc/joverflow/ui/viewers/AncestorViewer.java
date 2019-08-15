@@ -11,18 +11,16 @@ import org.eclipse.swt.widgets.*;
 import org.openjdk.jmc.flightrecorder.ui.FlightRecorderUI;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
-import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.util.ColorIndexedArcAttributeProvider;
 import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class AncestorViewer extends ContentViewer implements ModelListener {
+public class AncestorViewer extends BaseViewer {
+    private Composite mContainer;
     private PieChartViewer mPieChart;
     private Group mFilterContainer;
     private Text mInput;
@@ -39,178 +37,182 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
     private boolean mAllIncluded = false;
 
     public AncestorViewer(Composite parent, int style) {
-        SashForm bottomRightSash = new SashForm(parent, SWT.NONE);
-        Group pieChartContainer = new Group(bottomRightSash, SWT.NONE);
-        pieChartContainer.setLayout(new FillLayout(SWT.VERTICAL));
+        mContainer = new SashForm(parent, style);
 
-        Label ancestorReferrerLabel = new Label(pieChartContainer, SWT.NONE);
-        ancestorReferrerLabel.setText("Ancestor referrer");
-
-        mPieChart = new PieChartViewer(pieChartContainer, SWT.BORDER);
-        mPieChart.setContentProvider(ArrayContentProvider.getInstance());
-        ColorIndexedArcAttributeProvider provider = new ColorIndexedArcAttributeProvider() {
-            @Override
-            public int getWeight(Object element) {
-                return (int) ((MemoryStatisticsItem) element).getMemory();
-            }
-        };
-        provider.setMinimumArcAngle(5);
-        mPieChart.setArcAttributeProvider(provider);
-        mPieChart.setMinimumArcAngle(5);
-        mPieChart.getPieChart().setZoomRatio(1.2);
-        mPieChart.setComparator(new ViewerComparator() {
-            @Override
-            public int compare(Viewer viewer, Object e1, Object e2) {
-                return (int) (((MemoryStatisticsItem) e2).getMemory() - ((MemoryStatisticsItem) e1).getMemory());
-            }
-        });
-
-        Group prefixContainer = new Group(pieChartContainer, SWT.NONE);
-        prefixContainer.setLayout(new FillLayout(SWT.VERTICAL));
         {
-            Label label = new Label(prefixContainer, SWT.NONE);
-            label.setText("Ancestor prefix");
+            Group leftContainer = new Group(mContainer, SWT.NONE);
+            leftContainer.setLayout(new FillLayout(SWT.VERTICAL));
 
-            mInput = new Text(prefixContainer, SWT.BORDER);
+            Label ancestorReferrerLabel = new Label(leftContainer, SWT.NONE);
+            ancestorReferrerLabel.setText("Ancestor referrer");
 
-            Group buttonContainer = new Group(prefixContainer, SWT.NONE);
-            buttonContainer.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-            Button clear = new Button(buttonContainer, SWT.NONE);
-            Button update = new Button(buttonContainer, SWT.NONE);
-            clear.setText("Clear");
-            update.setText("Update");
-            clear.addMouseListener(new MouseListener() {
+            mPieChart = new PieChartViewer(leftContainer, SWT.BORDER);
+            mPieChart.setContentProvider(ArrayContentProvider.getInstance());
+            ColorIndexedArcAttributeProvider provider = new ColorIndexedArcAttributeProvider() {
                 @Override
-                public void mouseDoubleClick(MouseEvent e) {
-                    // intentionally empty
+                public int getWeight(Object element) {
+                    return (int) ((MemoryStatisticsItem) element).getMemory();
                 }
-
+            };
+            provider.setMinimumArcAngle(5);
+            mPieChart.setArcAttributeProvider(provider);
+            mPieChart.setMinimumArcAngle(5);
+            mPieChart.getPieChart().setZoomRatio(1.2);
+            mPieChart.setComparator(new ViewerComparator() {
                 @Override
-                public void mouseDown(MouseEvent e) {
-                    mInput.setText("");
-                    updatePrefixFilter();
-                }
-
-                @Override
-                public void mouseUp(MouseEvent e) {
-                    // intentionally empty
-                }
-            });
-            update.addMouseListener(new MouseListener() {
-                @Override
-                public void mouseDoubleClick(MouseEvent e) {
-                    // intentionally empty
-                }
-
-                @Override
-                public void mouseDown(MouseEvent e) {
-                    updatePrefixFilter();
-                }
-
-                @Override
-                public void mouseUp(MouseEvent e) {
-                    // intentionally empty
+                public int compare(Viewer viewer, Object e1, Object e2) {
+                    return (int) (((MemoryStatisticsItem) e2).getMemory() - ((MemoryStatisticsItem) e1).getMemory());
                 }
             });
 
+            Group prefixContainer = new Group(leftContainer, SWT.NONE);
+            prefixContainer.setLayout(new FillLayout(SWT.VERTICAL));
+
+            {
+                Label label = new Label(prefixContainer, SWT.NONE);
+                label.setText("Ancestor prefix");
+
+                mInput = new Text(prefixContainer, SWT.BORDER);
+
+                Group buttonContainer = new Group(prefixContainer, SWT.NONE);
+                buttonContainer.setLayout(new RowLayout(SWT.HORIZONTAL));
+
+                Button clear = new Button(buttonContainer, SWT.NONE);
+                Button update = new Button(buttonContainer, SWT.NONE);
+                clear.setText("Clear");
+                update.setText("Update");
+                clear.addMouseListener(new MouseListener() {
+                    @Override
+                    public void mouseDoubleClick(MouseEvent e) {
+                        // intentionally empty
+                    }
+
+                    @Override
+                    public void mouseDown(MouseEvent e) {
+                        mInput.setText("");
+                        updatePrefixFilter();
+                    }
+
+                    @Override
+                    public void mouseUp(MouseEvent e) {
+                        // intentionally empty
+                    }
+                });
+                update.addMouseListener(new MouseListener() {
+                    @Override
+                    public void mouseDoubleClick(MouseEvent e) {
+                        // intentionally empty
+                    }
+
+                    @Override
+                    public void mouseDown(MouseEvent e) {
+                        updatePrefixFilter();
+                    }
+
+                    @Override
+                    public void mouseUp(MouseEvent e) {
+                        // intentionally empty
+                    }
+                });
+
+            }
+
+            mFilterContainer = new Group(leftContainer, SWT.NONE);
+            mFilterContainer.setLayout(new FillLayout(SWT.VERTICAL));
         }
 
-        mFilterContainer = new Group(pieChartContainer, SWT.NONE);
-        mFilterContainer.setLayout(new FillLayout(SWT.VERTICAL));
+        {
+            Group tableContainer = new Group(mContainer, SWT.NONE);
+            tableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-        Group ancestorReferrerTableContainer = new Group(bottomRightSash, SWT.NONE);
-        ancestorReferrerTableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
+            mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.BORDER | SWT.FULL_SELECTION,
+                    (e) -> mPieChart.getArcAttributeProvider().getColor(e));
+            mTableViewer.setInput(mInputModel);
 
-        mTableViewer = new MemoryStatisticsTableViewer(ancestorReferrerTableContainer,
-                SWT.BORDER | SWT.FULL_SELECTION, (e) -> mPieChart.getArcAttributeProvider().getColor(e));
-        mTableViewer.setInput(mInputModel);
+            mTableViewer.addSelectionChangedListener((event) -> {
+                if (event.getStructuredSelection().isEmpty()) {
+                    return;
+                }
+                MemoryStatisticsItem item = (MemoryStatisticsItem) event.getStructuredSelection().getFirstElement();
+                if (item.getId() == null) {
+                    return;
+                }
 
-        mTableViewer.addSelectionChangedListener((event) -> {
-            if (event.getStructuredSelection().isEmpty()) {
-                return;
-            }
-            MemoryStatisticsItem item = (MemoryStatisticsItem) event.getStructuredSelection().getFirstElement();
-
-            String ancestor = item.getId().toString();
-            boolean excluded = false;
-            Predicate<RefChainElement> filter = (referrer) -> {
-                while (referrer != null) {
-                    String refName = referrer.toString();
-                    if (ancestor.equals(refName)) {
-                        return !excluded;
+                String ancestor = item.getId().toString();
+                boolean excluded = false;
+                Predicate<RefChainElement> filter = (referrer) -> {
+                    while (referrer != null) {
+                        String refName = referrer.toString();
+                        if (ancestor.equals(refName)) {
+                            return !excluded;
+                        }
+                        referrer = referrer.getReferer();
                     }
-                    referrer = referrer.getReferer();
-                }
-                return excluded;
-            };
-            mFilters.add(filter);
+                    return excluded;
+                };
+                mFilters.add(filter);
 
-            Button button = new Button(mFilterContainer, SWT.NONE);
-            button.setText("Ancestors" + (excluded ? " \u220C " : " \u220B ") + ancestor);
-            button.addMouseListener(new MouseListener() {
-                @Override
-                public void mouseDoubleClick(MouseEvent e) {
-                    // intentionally empty
-                }
+                Button button = new Button(mFilterContainer, SWT.NONE);
+                button.setText("Ancestors" + (excluded ? " \u220C " : " \u220B ") + ancestor);
+                button.addMouseListener(new MouseListener() {
+                    @Override
+                    public void mouseDoubleClick(MouseEvent e) {
+                        // intentionally empty
+                    }
 
-                @Override
-                public void mouseDown(MouseEvent e) {
-                    mFilters.remove(filter);
-                    button.dispose();
+                    @Override
+                    public void mouseDown(MouseEvent e) {
+                        mFilters.remove(filter);
+                        button.dispose();
 
-                    // TODO: investigate why layout is not auto updated
-                    mFilterContainer.layout(true, true);
-                    mTableViewer.getTable().setFocus();
-                    mTableViewer.setSelection(StructuredSelection.EMPTY, true);
-                }
+                        // TODO: investigate why layout is not auto updated
+                        mFilterContainer.layout(true, true);
+                        notifyFilterChangedListeners();
+                    }
 
-                @Override
-                public void mouseUp(MouseEvent e) {
-                    // intentionally empty
-                }
+                    @Override
+                    public void mouseUp(MouseEvent e) {
+                        // intentionally empty
+                    }
+                });
+
+                // TODO: investigate why layout is not auto updated
+                mFilterContainer.layout(true, true);
+
+                notifyFilterChangedListeners();
             });
+        }
 
-            // TODO: investigate why layout is not auto updated
-            mFilterContainer.layout(true, true);
-        });
     }
 
     @Override
     public Control getControl() {
-        return null;
-    }
-
-    @Override
-    public void addSelectionChangedListener(ISelectionChangedListener listener) {
-        mTableViewer.addSelectionChangedListener(listener);
+        return mContainer;
     }
 
     @Override
     public ISelection getSelection() {
-        return null;
-    }
-
-    @Override
-    public void removeSelectionChangedListener(ISelectionChangedListener listener) {
-        mTableViewer.removeSelectionChangedListener(listener);
+        return mTableViewer.getSelection();
     }
 
     @Override
     public void refresh() {
-
+        mTableViewer.refresh();
+        mPieChart.refresh();
     }
 
     @Override
     public void setSelection(ISelection selection, boolean reveal) {
-
+        mTableViewer.setSelection(selection, reveal);
+        mPieChart.setSelection(selection, reveal);
     }
 
     private String getAncestorReferrer(RefChainElement referrer) {
         while (referrer != null) {
             if (referrer.getJavaClass() == null) {
                 if (referrer.getReferer() != null) {
-                    FlightRecorderUI.getDefault().getLogger().warning("JavaClass for " + referrer + " is null but referrer is " + referrer.getReferer());
+                    FlightRecorderUI.getDefault().getLogger()
+                            .warning("JavaClass for " + referrer + " is null but referrer is " + referrer.getReferer());
                 }
                 break; // GC root
             } else if (referrer.toString().startsWith(mPrefix)) {
@@ -246,42 +248,42 @@ public class AncestorViewer extends ContentViewer implements ModelListener {
     public void allIncluded() {
         Collection<MemoryStatisticsItem> values = items.values();
 
-        Instant then = Instant.now();
         mInputModel.setInput(values);
-        System.out.println("AncestorViewer table took " + Duration.between(Instant.now(), then));
-
-        then = Instant.now();
         mPieChart.setInput(values);
-        System.out.println("AncestorViewer pie chart took " + Duration.between(Instant.now(), then));
 
         mAllIncluded = true;
         lastRef = null;
-
-        System.out.println("AncestorViewer has " + items.values().size() + " entries");
     }
 
     private void updatePrefixFilter() {
         mPrefix = mInput.getText();
 
         if (mTableViewer != null) {
-            mTableViewer.getTable().setFocus();
-            mTableViewer.setSelection(StructuredSelection.EMPTY, true);
+            notifyFilterChangedListeners();
         }
     }
 
-    public Predicate<RefChainElement> getFilter() {
-        Predicate<RefChainElement> res = rce -> true;
+    @Override
+    public void setHeapSize(long size) {
+        mTableViewer.setHeapSize(size);
+    }
+
+    @Override
+    public boolean filter(ObjectCluster oc) {
+        return true;
+    }
+
+    @Override
+    public boolean filter(RefChainElement rce) {
+        Predicate<RefChainElement> res = in -> true;
         for (Predicate<RefChainElement> filter : mFilters) {
             res = res.and(filter);
         }
 
-        return res;
+        return res.test(rce);
     }
 
-    public void setTotalMemory(long memory) {
-        mTableViewer.setTotalMemory(memory);
-    }
-
+    @Override
     public void reset() {
         mFilters.clear();
         for (Control filter : mFilterContainer.getChildren()) {
