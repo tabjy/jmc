@@ -43,7 +43,7 @@ public class JOverflowUi extends Composite {
                 topLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mOverheadTypeViewer = new OverheadTypeViewer(topLeftContainer, SWT.NONE);
-                mOverheadTypeViewer.addFilterChangedListener(viewer -> updateModel());
+                mOverheadTypeViewer.addFilterChangedListener(this::updateModel);
             }
 
             // Cluster Group Viewer (bottom-left)
@@ -52,7 +52,7 @@ public class JOverflowUi extends Composite {
                 bottomLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mClusterGroupViewer = new ClusterGroupViewer(bottomLeftContainer, SWT.NONE);
-                mClusterGroupViewer.addFilterChangedListener(viewer -> updateModel());
+                mClusterGroupViewer.addFilterChangedListener(this::updateModel);
             }
             vSashLeft.setWeights(new int[]{1, 1});
         }
@@ -65,7 +65,7 @@ public class JOverflowUi extends Composite {
                 topRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mReferrerViewer = new ReferrerViewer(topRightContainer, SWT.NONE);
-                mReferrerViewer.addFilterChangedListener(viewer -> updateModel());
+                mReferrerViewer.addFilterChangedListener(this::updateModel);
             }
 
             // Ancestor Viewer (bottom-right)
@@ -74,7 +74,7 @@ public class JOverflowUi extends Composite {
                 bottomRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
                 mAncestorViewer = new AncestorViewer(bottomRightContainer, SWT.NONE);
-                mAncestorViewer.addFilterChangedListener(viewer -> updateModel());
+                mAncestorViewer.addFilterChangedListener(this::updateModel);
             }
             vSashRight.setWeights(new int[]{1, 1});
         }

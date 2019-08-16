@@ -11,22 +11,21 @@ import org.openjdk.jmc.flightrecorder.ui.FlightRecorderUI;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
+import org.openjdk.jmc.joverflow.ui.swt.FilterList;
 import org.openjdk.jmc.joverflow.ui.util.ColorIndexedArcAttributeProvider;
 import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
 import java.util.*;
-import java.util.List;
 import java.util.function.Predicate;
 
 public class AncestorViewer extends BaseViewer {
     private SashForm mContainer;
     private PieChartViewer mPieChart;
-    private Group mFilterContainer;
+    private FilterList<RefChainElement> mFilterList;
     private Text mInput;
     private final MemoryStatisticsTableViewer mTableViewer;
 
     private String mPrefix = "";
-    private List<Predicate<RefChainElement>> mFilters = new ArrayList<>();
 
     private RefChainElement lastRef;
     private MemoryStatisticsItem lastItem;
@@ -43,7 +42,7 @@ public class AncestorViewer extends BaseViewer {
             leftContainer.setLayout(new FormLayout());
 
             Label title = new Label(leftContainer, SWT.NONE);
-            title.setText("Ancestor referrer");
+            title.setText("Ancestor Referrer");
             {
                 FormData data = new FormData();
                 data.top = new FormAttachment(0, 10);
@@ -66,7 +65,7 @@ public class AncestorViewer extends BaseViewer {
                 mInput = new Text(leftContainer, SWT.BORDER);
                 mInput.setMessage("Ancestor prefix");
                 mInput.addListener(SWT.Traverse, event -> {
-                    if(event.detail == SWT.TRAVERSE_RETURN){
+                    if (event.detail == SWT.TRAVERSE_RETURN) {
                         updatePrefixFilter();
                     }
                 });
@@ -108,14 +107,11 @@ public class AncestorViewer extends BaseViewer {
                     }
                 });
 
-                mFilterContainer = new Group(container, SWT.NONE);
-                RowLayout layout = new RowLayout(SWT.VERTICAL);
-                layout.fill = true;
-                mFilterContainer.setLayout(layout);
-                
-                container.setWeights(new int[] {3, 2});
-            }
+                mFilterList = new FilterList<>(container, SWT.NONE);
+                mFilterList.addFilterChangedListener(this::notifyFilterChangedListeners);
 
+                container.setWeights(new int[]{3, 2});
+            }
 
         }
 
@@ -127,62 +123,73 @@ public class AncestorViewer extends BaseViewer {
                     (e) -> mPieChart.getArcAttributeProvider().getColor(e));
             mTableViewer.setInput(mInputModel);
 
-            mTableViewer.addSelectionChangedListener((event) -> {
-                if (event.getStructuredSelection().isEmpty()) {
-                    return;
-                }
-                MemoryStatisticsItem item = (MemoryStatisticsItem) event.getStructuredSelection().getFirstElement();
-                if (item.getId() == null) {
-                    return;
+            mTableViewer.getTable().addMouseListener(new MouseListener() {
+                @Override
+                public void mouseDoubleClick(MouseEvent e) {
+                    // no op
                 }
 
-                String ancestor = item.getId().toString();
-                boolean excluded = false;
-                Predicate<RefChainElement> filter = (referrer) -> {
-                    while (referrer != null) {
-                        String refName = referrer.toString();
-                        if (ancestor.equals(refName)) {
-                            return !excluded;
+                @Override
+                public void mouseDown(MouseEvent e) {
+                    // no op
+                }
+
+                @Override
+                public void mouseUp(MouseEvent e) {
+                    if (e.button != 1 && e.button != 3) {
+                        return;
+                    }
+
+                    if (mTableViewer.getSelection().isEmpty()) {
+                        return;
+                    }
+                    IStructuredSelection selection = (IStructuredSelection) mTableViewer.getSelection();
+                    MemoryStatisticsItem item = (MemoryStatisticsItem) selection.getFirstElement();
+                    if (item.getId() == null) {
+                        return;
+                    }
+
+
+                    mFilterList.addFilter(new Predicate<RefChainElement>() {
+                        String ancestor = item.getId().toString();
+                        boolean excluded = e.button == 3;
+
+                        @Override
+                        public boolean test(RefChainElement referrer) {
+                            while (referrer != null) {
+                                String refName = referrer.toString();
+                                if (ancestor.equals(refName)) {
+                                    return !excluded;
+                                }
+                                referrer = referrer.getReferer();
+                            }
+                            return excluded;
                         }
-                        referrer = referrer.getReferer();
-                    }
-                    return excluded;
-                };
-                mFilters.add(filter);
 
-                Button button = new Button(mFilterContainer, SWT.NONE);
-                button.setText("Ancestors" + (excluded ? " \u220C " : " \u220B ") + ancestor);
-                button.addMouseListener(new MouseListener() {
-                    @Override
-                    public void mouseDoubleClick(MouseEvent e) {
-                        // intentionally empty
-                    }
+                        @Override
+                        public String toString() {
+                            return "Ancestors" + (excluded ? " \u220C " : " \u220B ") + ancestor;
+                        }
 
-                    @Override
-                    public void mouseDown(MouseEvent e) {
-                        mFilters.remove(filter);
-                        button.dispose();
+                        @Override
+                        public int hashCode() {
+                            return ancestor.hashCode();
+                        }
 
-                        // TODO: investigate why layout is not auto updated
-                        mFilterContainer.layout(true, true);
-                        notifyFilterChangedListeners();
-                    }
-
-                    @Override
-                    public void mouseUp(MouseEvent e) {
-                        // intentionally empty
-                    }
-                });
-
-                // TODO: investigate why layout is not auto updated
-                mFilterContainer.layout(true, true);
-
-                notifyFilterChangedListeners();
+                        @Override
+                        public boolean equals(Object obj) {
+                        	if (getClass() != obj.getClass()) {
+                        		return false;
+                        	}
+                        	
+                            return hashCode() == obj.hashCode();
+                        }
+                    });
+                }
             });
         }
 
-        
-        mContainer.setWeights(new int[] {1, 2});
+        mContainer.setWeights(new int[]{1, 2});
     }
 
     @Override
@@ -275,20 +282,12 @@ public class AncestorViewer extends BaseViewer {
 
     @Override
     public boolean filter(RefChainElement rce) {
-        Predicate<RefChainElement> res = in -> true;
-        for (Predicate<RefChainElement> filter : mFilters) {
-            res = res.and(filter);
-        }
-
-        return res.test(rce);
+        return mFilterList.filter(rce);
     }
 
     @Override
     public void reset() {
-        mFilters.clear();
-        for (Control filter : mFilterContainer.getChildren()) {
-            filter.dispose();
-        }
+        mFilterList.reset();
         mInput.setText("");
         updatePrefixFilter();
     }

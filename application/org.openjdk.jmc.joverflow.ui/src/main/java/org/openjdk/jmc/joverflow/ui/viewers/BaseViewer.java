@@ -21,7 +21,7 @@ abstract public class BaseViewer extends ContentViewer implements ModelListener 
 
     void notifyFilterChangedListeners() {
         for (FilterChangedListener l : mListeners) {
-            l.onFilterChanged(this);
+            l.onFilterChanged();
         }
     }
 

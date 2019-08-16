@@ -40,7 +40,7 @@ public class ColorIndexedArcAttributeProvider extends BaseArcAttributeProvider {
         }
 
         return colors.computeIfAbsent(element, (obj) -> {
-            RGB rgb = new RGB((float)(obj.hashCode() % 361), 0.8f, 0.9f);
+            RGB rgb = new RGB((float)(obj.hashCode() % 360), 0.8f, 0.9f);
             return new Color(Display.getCurrent(), rgb);
         });
     }
