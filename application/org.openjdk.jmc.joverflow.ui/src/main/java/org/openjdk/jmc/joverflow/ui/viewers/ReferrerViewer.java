@@ -26,15 +26,6 @@ public class ReferrerViewer extends BaseViewer {
         mTreeViewer = new ReferrerTreeViewer(parent, style | SWT.FULL_SELECTION);
         mTreeViewer.setInput(mInputModel);
 
-        mTreeViewer.addSelectionChangedListener(event -> {
-            if (event.getStructuredSelection().isEmpty()) {
-                return;
-            }
-            mSelectedItem = (ReferrerItem) event.getStructuredSelection().getFirstElement();
-
-            notifyFilterChangedListeners();
-        });
-
         mTreeViewer.getControl().addMouseListener(new MouseListener() {
             @Override
             public void mouseDoubleClick(MouseEvent e) {
@@ -43,6 +34,15 @@ public class ReferrerViewer extends BaseViewer {
 
             @Override
             public void mouseDown(MouseEvent e) {
+                if (e.button == 1) { // left button
+                    if (mTreeViewer.getSelection().isEmpty()) {
+                        return;
+                    }
+                    IStructuredSelection selection = (IStructuredSelection) mTreeViewer.getSelection();
+                    mSelectedItem = (ReferrerItem) selection.getFirstElement();
+
+                    notifyFilterChangedListeners();
+                }
                 if (e.button == 3) { // right button
                     reset();
                 }

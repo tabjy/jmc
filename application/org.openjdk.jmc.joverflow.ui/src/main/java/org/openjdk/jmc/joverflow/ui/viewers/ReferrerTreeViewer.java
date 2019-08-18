@@ -5,12 +5,10 @@ import org.eclipse.jface.viewers.deferred.DeferredContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.Widget;
+import org.eclipse.swt.widgets.*;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 
 import java.util.*;
@@ -26,7 +24,7 @@ class ReferrerTreeViewer extends TableViewer {
     private DeferredContentProvider mContentProvider;
 
     ReferrerTreeViewer(Composite parent, int style) {
-        super(parent, style | SWT.VIRTUAL);
+        super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
 
         mContentProvider = new DeferredContentProvider((lhs, rhs) -> 0);
         mContentProvider.setFilter(element -> ((ReferrerItem) element).getSize() > 0);
@@ -150,10 +148,9 @@ class ReferrerTreeViewer extends TableViewer {
         @Override
         public int compare(Object e1, Object e2) {
             if (((ReferrerItem) e1).getLevel() == ((ReferrerItem) e2).getLevel()) {
-            	return (decreasing ? -1 : 1) * doCompare(e1, e2);
-            	
+                return (decreasing ? -1 : 1) * doCompare(e1, e2);
             } else {
-            	return ((ReferrerItem) e1).getLevel() - ((ReferrerItem) e2).getLevel();
+                return ((ReferrerItem) e1).getLevel() - ((ReferrerItem) e2).getLevel();
             }
         }
 

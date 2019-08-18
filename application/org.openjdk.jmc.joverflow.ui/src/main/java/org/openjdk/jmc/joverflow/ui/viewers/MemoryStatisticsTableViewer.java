@@ -25,7 +25,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
 	private Function<MemoryStatisticsItem, Color> mColorProvider;
 
 	MemoryStatisticsTableViewer(Composite parent, int style, Function<MemoryStatisticsItem, Color> colorProvider) {
-		super(parent, SWT.VIRTUAL | SWT.NO_FOCUS | SWT.HIDE_SELECTION | SWT.FULL_SELECTION);
+		super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
 
 		mColorProvider = colorProvider;
 		mContentProvider = new DeferredContentProvider((lhs, rhs) -> 0);
