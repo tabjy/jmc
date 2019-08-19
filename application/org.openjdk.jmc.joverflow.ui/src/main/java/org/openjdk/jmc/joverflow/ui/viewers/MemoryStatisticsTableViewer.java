@@ -22,18 +22,17 @@ class MemoryStatisticsTableViewer extends TableViewer {
 	private TableViewerColumnComparator mActiveColumnComparator;
 	private DeferredContentProvider mContentProvider;
 
-	private Function<MemoryStatisticsItem, Color> mColorProvider;
-
 	MemoryStatisticsTableViewer(Composite parent, int style, Function<MemoryStatisticsItem, Color> colorProvider) {
 		super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
 
-		mColorProvider = colorProvider;
+		// FIXME: Bug 165637 - [Viewers] ArrayIndexOutOfBoundsException exception in ConcurrentTableUpdator (used in DeferredContentProvider)
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=165637
 		mContentProvider = new DeferredContentProvider((lhs, rhs) -> 0);
 		mContentProvider.setFilter(element -> ((MemoryStatisticsItem) element).getSize() > 0);
 		setContentProvider(mContentProvider);
 
 		// TODO: change to a conversion method that's not so primitive
-		mPrimaryColumn = createTableColumnViewer("Name", MemoryStatisticsItem::getName, mColorProvider,
+		mPrimaryColumn = createTableColumnViewer("Name", MemoryStatisticsItem::getName, colorProvider,
 				(lhs, rhs) -> lhs.getName().compareTo(rhs.getName()), false);
 
 		createTableColumnViewer("Memory KB",
@@ -51,7 +50,6 @@ class MemoryStatisticsTableViewer extends TableViewer {
 		getTable().setHeaderVisible(true);
 	}
 
-	@SuppressWarnings("Duplicates")
 	private TableViewerColumn createTableColumnViewer(String label,
 			Function<MemoryStatisticsItem, String> labelProvider, Function<MemoryStatisticsItem, Color> colorProvider,
 			BiFunction<MemoryStatisticsItem, MemoryStatisticsItem, Integer> comparator, boolean sort) {
@@ -66,7 +64,8 @@ class MemoryStatisticsTableViewer extends TableViewer {
 				Widget item = event.item;
 
 				if (element == null) {
-					// FIXME: Bug 146799 https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
+					// FIXME: Bug 146799 - Blank last table item on virtual table
+                	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
 					return;
 				}
 				Rectangle bounds = ((TableItem) item).getBounds(event.index);

@@ -26,6 +26,8 @@ class ReferrerTreeViewer extends TableViewer {
     ReferrerTreeViewer(Composite parent, int style) {
         super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
 
+        // FIXME: Bug 165637 - [Viewers] ArrayIndexOutOfBoundsException exception in ConcurrentTableUpdator (used in DeferredContentProvider)
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=165637
         mContentProvider = new DeferredContentProvider((lhs, rhs) -> 0);
         mContentProvider.setFilter(element -> ((ReferrerItem) element).getSize() > 0);
         setContentProvider(mContentProvider);
@@ -55,7 +57,6 @@ class ReferrerTreeViewer extends TableViewer {
         getTable().setHeaderVisible(true);
     }
 
-    @SuppressWarnings("Duplicates")
     private void createTreeViewerColumn(String label, Function<ReferrerItem, String> labelProvider, BiFunction<ReferrerItem, ReferrerItem, Integer> comparator, boolean sort, boolean intent) {
         TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
         column.getColumn().setWidth(200);
@@ -68,7 +69,8 @@ class ReferrerTreeViewer extends TableViewer {
                 Widget item = event.item;
 
                 if (element == null) {
-                    // FIXME: Bug 146799 https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
+                    // FIXME: Bug 146799 - Blank last table item on virtual table
+                	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
                     return;
                 }
                 Rectangle bounds = ((TableItem) item).getBounds(event.index);
