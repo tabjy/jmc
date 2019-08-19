@@ -64,9 +64,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.List;
 
-public class JOverflowEditor extends EditorPart {
-    public static final String EDITOR_ID = "org.openjdk.jmc.joverflow.mJOverflowUi.JOverflowEditor";
-
+class JOverflowEditor extends EditorPart {
     private final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
 
     private FormToolkit mFormToolkit;
@@ -79,7 +77,7 @@ public class JOverflowEditor extends EditorPart {
     private Snapshot mSnapshot;
     private Collection<ReferenceChain> mModel;
     
-    private List<UiLoadedListener> mUiLoadedListeners = new ArrayList<>();
+    private final List<UiLoadedListener> mUiLoadedListeners = new ArrayList<>();
 
     @Override
     public void init(IEditorSite site, IEditorInput input) throws PartInitException {

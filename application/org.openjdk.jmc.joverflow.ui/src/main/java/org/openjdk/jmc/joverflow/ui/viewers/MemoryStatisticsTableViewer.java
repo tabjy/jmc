@@ -18,9 +18,9 @@ import java.util.function.Function;
 class MemoryStatisticsTableViewer extends TableViewer {
 
 	private long mHeapSize;
-	private TableViewerColumn mPrimaryColumn;
+	private final TableViewerColumn mPrimaryColumn;
 	private TableViewerColumnComparator mActiveColumnComparator;
-	private DeferredContentProvider mContentProvider;
+	private final DeferredContentProvider mContentProvider;
 
 	MemoryStatisticsTableViewer(Composite parent, int style, Function<MemoryStatisticsItem, Color> colorProvider) {
 		super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);

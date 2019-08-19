@@ -13,22 +13,21 @@ import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.swt.FilterList;
 import org.openjdk.jmc.joverflow.ui.util.ColorIndexedArcAttributeProvider;
 import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
-import org.openjdk.jmc.joverflow.ui.util.FilterChangedListener;
 
 import java.util.*;
 import java.util.function.Predicate;
 
 public class ClusterGroupViewer extends BaseViewer {
 
-    private SashForm mContainer;
-    private Label mTitle;
-    private PieChartViewer mPieChart;
-    private FilterList<ObjectCluster> mFilterList;
+    private final SashForm mContainer;
+    private final Label mTitle;
+    private final PieChartViewer mPieChart;
+    private final FilterList<ObjectCluster> mFilterList;
     private final MemoryStatisticsTableViewer mTableViewer;
 
     private String mQualifierName;
     private final Map<Object, MemoryStatisticsItem> items = new HashMap<>();
-    private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
+    private final ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 
     private boolean mAllIncluded = false;
 
@@ -120,9 +119,9 @@ public class ClusterGroupViewer extends BaseViewer {
                     }
 
                     mFilterList.addFilter(new Predicate<ObjectCluster>() {
-                        String qualifierName = mQualifierName;
-                        String itemName = item.getId().toString();
-                        boolean excluded = e.button == 3;
+                        final String qualifierName = mQualifierName;
+                        final String itemName = item.getId().toString();
+                        final boolean excluded = e.button == 3;
 
                         @Override
                         public boolean test(ObjectCluster oc) {

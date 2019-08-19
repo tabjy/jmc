@@ -7,7 +7,7 @@ import org.eclipse.jface.viewers.deferred.IConcurrentModelListener;
 import java.util.Collection;
 
 public class ConcurrentModelInputWrapper implements IConcurrentModel {
-    private ListenerList<IConcurrentModelListener> mModelListeners = new ListenerList<>();
+    private final ListenerList<IConcurrentModelListener> mModelListeners = new ListenerList<>();
     private Object[] mElements;
 
     public void setInput(Object input) {
