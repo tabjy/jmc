@@ -9,13 +9,13 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 
 public class ColorIndexedArcAttributeProvider extends BaseArcAttributeProvider {
-    private final Color COLOR_GRAY = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
+    private Color COLOR_GRAY = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
 
     private int totalWeight = 0;
     private int minimumAngle = 0;
 
     // cache
-    private final Map<Object, Color> colors = new HashMap<>();
+    private Map<Object, Color> colors = new HashMap<>();
     public ColorIndexedArcAttributeProvider() {
         super();
 

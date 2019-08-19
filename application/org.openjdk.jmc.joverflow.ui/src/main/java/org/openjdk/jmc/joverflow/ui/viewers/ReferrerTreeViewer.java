@@ -5,6 +5,7 @@ import org.eclipse.jface.viewers.deferred.DeferredContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
@@ -20,7 +21,7 @@ class ReferrerTreeViewer extends TableViewer {
     private long mHeapSize;
 
     private TreeViewerColumnComparator mActiveColumnComparator;
-    private final DeferredContentProvider mContentProvider;
+    private DeferredContentProvider mContentProvider;
 
     ReferrerTreeViewer(Composite parent, int style) {
         super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);

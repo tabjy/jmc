@@ -12,11 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PieChart extends Canvas {
-    private static final int MARGIN = 5;
+    private static int MARGIN = 5;
 
     private double mZoomRatio = 1;
 
-    private final List<ArcItem> mArcs = new ArrayList<>();
+    private List<ArcItem> mArcs = new ArrayList<>();
     private ArcItem mHighlightedItem;
 
     public PieChart(Composite parent, int style) {

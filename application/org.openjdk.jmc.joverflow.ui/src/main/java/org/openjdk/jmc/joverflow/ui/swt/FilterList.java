@@ -16,11 +16,11 @@ import java.util.function.Predicate;
 
 public class FilterList<T> extends Composite {
 
-    private final ScrolledComposite mScrolledComposite;
-    private final Composite mFilterContainer;
+    private ScrolledComposite mScrolledComposite;
+    private Composite mFilterContainer;
 
-    private final HashSet<Predicate<T>> mFilters = new HashSet<>();
-    private final ListenerList<FilterChangedListener> mListeners = new ListenerList<>();
+    private HashSet<Predicate<T>> mFilters = new HashSet<>();
+    private ListenerList<FilterChangedListener> mListeners = new ListenerList<>();
 
     public FilterList(Composite parent, int style) {
         super(parent, style);

@@ -1,5 +1,8 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -12,8 +15,8 @@ public class OverheadTypeViewer extends BaseViewer {
 
     private final MemoryStatisticsTableViewer mTableViewer;
 
-    private final MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
-    private final ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
+    private MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
+    private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
     private ClusterType mCurrentType = ClusterType.ALL_OBJECTS;
 
     private boolean mAllIncluded = false;

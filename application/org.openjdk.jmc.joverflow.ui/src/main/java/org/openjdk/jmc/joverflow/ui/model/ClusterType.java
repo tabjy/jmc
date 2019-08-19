@@ -53,7 +53,7 @@ public enum ClusterType {
 	DUPLICATE_STRING("Duplicate Strings"),
 	DUPLICATE_ARRAY("Duplicate Arrays"),
 	ALL_OBJECTS("All Objects");
-	private final String headline;
+	private String headline;
 
 	ClusterType(String headline) {
 		this.headline = headline;

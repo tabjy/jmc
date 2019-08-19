@@ -16,9 +16,9 @@ import java.util.List;
 
 public class ReferrerViewer extends BaseViewer {
 
-    private final ReferrerTreeViewer mTreeViewer;
+    private ReferrerTreeViewer mTreeViewer;
     private ReferrerItemBuilder mItemBuilder;
-    private final ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
+    private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 
     private ReferrerItem mSelectedItem;
 

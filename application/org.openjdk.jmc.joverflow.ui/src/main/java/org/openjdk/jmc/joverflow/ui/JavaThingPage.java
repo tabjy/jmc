@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 public class JavaThingPage extends Page implements ModelListener {
-    private final JOverflowEditor mEditor;
+    private JOverflowEditor mEditor;
     private JavaThingTreeViewer mTreeViewer;
 
     private static final int MAX = 500;

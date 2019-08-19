@@ -19,10 +19,10 @@ import java.util.*;
 import java.util.function.Predicate;
 
 public class AncestorViewer extends BaseViewer {
-    private final SashForm mContainer;
-    private final PieChartViewer mPieChart;
-    private final FilterList<RefChainElement> mFilterList;
-    private final Text mInput;
+    private SashForm mContainer;
+    private PieChartViewer mPieChart;
+    private FilterList<RefChainElement> mFilterList;
+    private Text mInput;
     private final MemoryStatisticsTableViewer mTableViewer;
 
     private String mPrefix = "";
@@ -30,7 +30,7 @@ public class AncestorViewer extends BaseViewer {
     private RefChainElement lastRef;
     private MemoryStatisticsItem lastItem;
     private final Map<Object, MemoryStatisticsItem> items = new HashMap<>();
-    private final ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
+    private ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 
     private boolean mAllIncluded = false;
 
@@ -151,8 +151,8 @@ public class AncestorViewer extends BaseViewer {
 
 
                     mFilterList.addFilter(new Predicate<RefChainElement>() {
-                        final String ancestor = item.getId().toString();
-                        final boolean excluded = e.button == 3;
+                        String ancestor = item.getId().toString();
+                        boolean excluded = e.button == 3;
 
                         @Override
                         public boolean test(RefChainElement referrer) {

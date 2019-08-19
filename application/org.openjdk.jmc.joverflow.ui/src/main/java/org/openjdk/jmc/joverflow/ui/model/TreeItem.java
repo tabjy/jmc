@@ -32,7 +32,7 @@
  */
 package org.openjdk.jmc.joverflow.ui.model;
 
-interface TreeItem {
+public interface TreeItem {
 
 	boolean isExpanded();
 

@@ -20,7 +20,7 @@ import java.util.List;
 
 class PieChartViewer extends StructuredViewer {
 
-    private final PieChart mPieChart;
+    private PieChart mPieChart;
     private IArcAttributeProvider mArcAttributeProvider = new BaseArcAttributeProvider();
     private ArcItem mOtherArc;
     private int mMinimumArcAngle = 0;
