@@ -29,7 +29,8 @@ public class JavaThingPage extends Page implements ModelListener {
     private FutureTask<Void> mCurrentTask;
     private final int[] mObjects = new int[MAX];
     private int mObjectsInArray;
-    private int mTotalInstancesCount;
+    private int mTotalInstancesCount;    
+    private boolean mTaskCancelled = false;
 
     JavaThingPage(JOverflowEditor editor) {
         mEditor = editor;
@@ -68,15 +69,22 @@ public class JavaThingPage extends Page implements ModelListener {
     @Override
     public void allIncluded() {
         if (mCurrentTask != null) {
+        	mTaskCancelled = true;
             mCurrentTask.cancel(false);
         }
 
-//        mCurrentTask = new LoadJavaThingsTask(Arrays.copyOf(mObjects, mObjectsInArray), mTotalInstancesCount);
         int[] objects = Arrays.copyOf(mObjects, mObjectsInArray);
         int instanceCount = mTotalInstancesCount;
+        
+        mTreeViewer.setInput(null);
+        
+        mTaskCancelled = false;
         mCurrentTask = new FutureTask<>(() -> {
             List<JavaThingItem> items = new ArrayList<>();
             for (int i : objects) {
+            	if (mTaskCancelled) {
+            		return null;
+            	}
                 JavaHeapObject o = getObjectAtPosition(i);
                 items.add(new JavaThingItem(0, o.idAsString(), o));
             }
@@ -89,7 +97,7 @@ public class JavaThingPage extends Page implements ModelListener {
                     }
                 });
             }
-
+            
             DisplayToolkit.inDisplayThread().execute(() -> mTreeViewer.setInput(items));
 
             return null;
