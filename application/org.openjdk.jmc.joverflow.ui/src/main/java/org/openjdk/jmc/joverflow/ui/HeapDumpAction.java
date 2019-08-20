@@ -58,8 +58,8 @@ import org.openjdk.jmc.ui.misc.DisplayToolkit;
 
 class HeapDumpAction implements IActionFactory {
 
-	private final static String DEFAULT_FILENAME = "dump_";
-	private final static String HPROF_FILE_EXTENSION = "hprof";
+	private final static String DEFAULT_FILENAME = "dump_"; //$NON-NLS-1$
+	private final static String HPROF_FILE_EXTENSION = "hprof"; //$NON-NLS-1$
 
 	private static class FileOpener implements Runnable {
 		File file;
@@ -82,7 +82,7 @@ class HeapDumpAction implements IActionFactory {
 					MBeanServerConnection connection = connector.getServiceOrThrow(MBeanServerConnection.class);
 					Object[] params = new Object[] {opener.file.getAbsolutePath(), Boolean.TRUE};
 					String[] sig = new String[] {String.class.getName(), boolean.class.getName()};
-					connection.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"), "dumpHeap", params, sig);
+					connection.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"), "dumpHeap", params, sig); //$NON-NLS-1$ //$NON-NLS-2$
 					DisplayToolkit.safeAsyncExec(opener);
 				}
 			} catch (Exception e) {
@@ -118,7 +118,7 @@ class HeapDumpAction implements IActionFactory {
 					if (file.exists()) {
 						dialog.setFilterPath(file.getPath());
 					}
-					dialog.setFilterExtensions(new String[] {"*." + HPROF_FILE_EXTENSION});
+					dialog.setFilterExtensions(new String[] {"*." + HPROF_FILE_EXTENSION}); //$NON-NLS-1$
 					dialog.setText("Locate the hprof file on your local filesystem");
 					String filePath = dialog.open();
 					if (filePath != null) {

@@ -31,7 +31,6 @@ class MemoryStatisticsTableViewer extends TableViewer {
 		mContentProvider.setFilter(element -> ((MemoryStatisticsItem) element).getSize() > 0);
 		setContentProvider(mContentProvider);
 
-		// TODO: change to a conversion method that's not so primitive
 		mPrimaryColumn = createTableColumnViewer("Name", MemoryStatisticsItem::getName, colorProvider,
 				(lhs, rhs) -> lhs.getName().compareTo(rhs.getName()), false);
 

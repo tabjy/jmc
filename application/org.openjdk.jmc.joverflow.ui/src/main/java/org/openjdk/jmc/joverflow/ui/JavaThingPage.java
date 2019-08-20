@@ -70,7 +70,7 @@ public class JavaThingPage extends Page implements ModelListener {
     public void allIncluded() {
         if (mCurrentTask != null) {
         	mTaskCancelled = true;
-            mCurrentTask.cancel(false);
+            mCurrentTask.cancel(false);// Don't stop the thread directly. Interruption breaks the atomicity inside getObjectAtGlobalIndex
         }
 
         int[] objects = Arrays.copyOf(mObjects, mObjectsInArray);
@@ -90,7 +90,6 @@ public class JavaThingPage extends Page implements ModelListener {
             }
             if (instanceCount > mObjects.length) {
                 items.add(new JavaThingItem(0, "...", (instanceCount - mObjects.length) + " more instances", 0, null) {
-
                     @Override
                     public String getSize() {
                         return "";

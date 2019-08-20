@@ -11,6 +11,7 @@ public class ColumnLayout extends Layout {
     // fixed margin and spacing
     private static final int MARGIN = 4;
     private static final int SPACING = 2;
+
     // cache
     private Point[] sizes;
     private int maxWidth, totalHeight;

@@ -7,6 +7,7 @@ import org.openjdk.jmc.joverflow.ui.model.ModelListener;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.util.FilterChangedListener;
 
+// Base class for 4 main viewers
 abstract public class BaseViewer extends ContentViewer implements ModelListener {
     private final ListenerList<FilterChangedListener> mListeners = new ListenerList<>();
     private long mHeapSize;

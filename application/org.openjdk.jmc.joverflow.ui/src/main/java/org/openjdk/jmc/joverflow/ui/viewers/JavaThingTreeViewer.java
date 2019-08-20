@@ -48,6 +48,10 @@ public class JavaThingTreeViewer<T extends JavaThingItem> extends TreeViewer {
         @SuppressWarnings("unchecked")
         @Override
         public Object[] getElements(Object inputElement) {
+            if (inputElement == null) {
+                return new Object[0];
+            }
+
             List<JavaThingItem> items = (List<JavaThingItem>) inputElement;
             return items.toArray();
         }
@@ -70,13 +74,13 @@ public class JavaThingTreeViewer<T extends JavaThingItem> extends TreeViewer {
                     JavaObjectArray o = (JavaObjectArray) thing;
                     int i = 0;
                     for (JavaThing th : o.getElements()) {
-                        items.add(new JavaThingItem(item.getLevel() + 1, "[" + (i++) + "]", th));
+                        items.add(new JavaThingItem(item.getLevel() + 1, "[" + (i++) + "]", th)); //$NON-NLS-1$ //$NON-NLS-2$
                     }
                 } else if (thing instanceof JavaValueArray) {
                     JavaValueArray o = (JavaValueArray) thing;
                     int i = 0;
                     for (String value : o.getValuesAsStrings()) {
-                        items.add(new JavaThingItem(item.getLevel() + 1, "[" + (i++) + "]", value, o.getElementSize(), null));
+                        items.add(new JavaThingItem(item.getLevel() + 1, "[" + (i++) + "]", value, o.getElementSize(), null)); //$NON-NLS-1$ //$NON-NLS-2$
                     }
 
                 }

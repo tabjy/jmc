@@ -139,7 +139,7 @@ public class ClusterGroupViewer extends BaseViewer {
                         @Override
                         public String toString() {
                             return (qualifierName == null ? "Class" : mQualifierName)
-                                    + (excluded ? " ≠ " : " = ")
+                                    + (excluded ? " ≠ " : " = ") //$NON-NLS-1$ //$NON-NLS-2$
                                     + item.getId().toString();
                         }
 

@@ -97,12 +97,10 @@ public class ModelLoader implements ProblemRecorder, Runnable {
 			HeapDumpReader reader = HeapDumpReader.createReader(factory, 0, new VerboseOutputCollector());
 			setReader(reader);
 			snapshot = reader.read();
-			JavaClass.setFieldBanned(snapshot.getClassForName(Constants.WEAK_REFERENCE), "referent");
+			JavaClass.setFieldBanned(snapshot.getClassForName(Constants.WEAK_REFERENCE), "referent"); //$NON-NLS-1$
 			StandardStatsCalculator dsc = new StandardStatsCalculator(snapshot, ModelLoader.this, true);
 			setCalculator(dsc);
 			dsc.calculate();
-//			System.out.println("HeapStats.totalObjSize = " + hs.totalObjSize);
-//			System.out.println("HeapStats.nObjects = " + hs.nObjects);
 			snapshot.discard();
 			snapshot.resetReadBuffer(new ReadBuffer.CachedReadBufferFactory(fileName, 25 * 1024 * 1024));
 			getLoaderListener().onModelLoaded(snapshot, buildModel());

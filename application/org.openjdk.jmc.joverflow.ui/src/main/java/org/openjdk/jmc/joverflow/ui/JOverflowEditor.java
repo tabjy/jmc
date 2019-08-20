@@ -93,7 +93,7 @@ public class JOverflowEditor extends EditorPart {
 
         if (ipei == null) {
             // Not likely to be null, but guard just in case
-            throw new PartInitException("The JOverflow editor cannot handle the provided editor input");
+            throw new PartInitException("The JOverflow editor cannot handle the provided editor input"); //$NON-NLS-1$
         }
 
         loadModel(ipei);
@@ -114,7 +114,7 @@ public class JOverflowEditor extends EditorPart {
 
         String inputPath = input.getPath().toOSString();
         mLoader = new ModelLoader(inputPath, new ModelLoaderListener() {
-            private double worked = 0;
+            private double worked = 0; // the amount of work already done
 
             @Override
             public void onProgressUpdate(final double progress) {
@@ -151,7 +151,8 @@ public class JOverflowEditor extends EditorPart {
                 	if (mProgressIndicator == null || mProgressIndicator.isDisposed()) {
                         return;
                     }
-                	
+
+                	// in case of overflow
                     if (progress < worked) {
                         mProgressIndicator.beginTask(1);
                         worked = 0;
@@ -240,12 +241,12 @@ public class JOverflowEditor extends EditorPart {
 
     @Override
     public void doSave(IProgressMonitor monitor) {
-        // intentionally empty
+        // no op
     }
 
     @Override
     public void doSaveAs() {
-        // intentionally empty
+        // no op
     }
 
     @Override

@@ -67,7 +67,7 @@ public class MemoryStatisticsItem {
     }
 
     public String getName() {
-        return id == null ? "N/A" : id.toString();
+        return id == null ? "N/A" : id.toString(); //$NON-NLS-1$
     }
 
     public void addObjectCluster(ObjectCluster oc) {

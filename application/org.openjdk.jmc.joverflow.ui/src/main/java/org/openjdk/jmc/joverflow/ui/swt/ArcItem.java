@@ -6,6 +6,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Item;
 
+// An ArcItem represents an arc in a PieChart
 public class ArcItem extends Item {
     private final PieChart mParent;
     private final int mStyle;
@@ -25,6 +26,7 @@ public class ArcItem extends Item {
         parent.createItem(this, index);
     }
 
+    // ArcItem and PieChart doesn't check if sum of all arcs' angle adds to more than 360
     public void setAngle(int angle) {
         if (angle < 0) {
             SWT.error(SWT.ERROR_INVALID_RANGE);

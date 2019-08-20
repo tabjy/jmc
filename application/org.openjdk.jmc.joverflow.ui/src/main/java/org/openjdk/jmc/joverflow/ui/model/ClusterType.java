@@ -94,7 +94,7 @@ public enum ClusterType {
 		case SMALL:
 			return ClusterType.SMALL_COLLECTION;
 		default:
-			throw new RuntimeException("Unknown problem kind " + pk);
+			throw new RuntimeException("Unknown problem kind " + pk); //$NON-NLS-1$
 		}
 	}
 

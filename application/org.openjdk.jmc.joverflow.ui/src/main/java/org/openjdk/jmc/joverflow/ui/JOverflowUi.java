@@ -11,7 +11,6 @@ import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.model.ReferenceChain;
 import org.openjdk.jmc.joverflow.ui.viewers.*;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -92,10 +91,12 @@ public class JOverflowUi extends Composite {
                 }
             }
         }
+
         mOverheadTypeViewer.setHeapSize(heapSize);
         mReferrerViewer.setHeapSize(heapSize);
         mClusterGroupViewer.setHeapSize(heapSize);
         mAncestorViewer.setHeapSize(heapSize);
+
         updateModel();
     }
 
@@ -106,7 +107,6 @@ public class JOverflowUi extends Composite {
         }
 
         mIsUpdatingModel = true;
-        Instant then = Instant.now();
 
         ClusterType currentType = mOverheadTypeViewer.getCurrentType();
 
@@ -164,6 +164,10 @@ public class JOverflowUi extends Composite {
 
     void addModelListener(final ModelListener listener) {
         mModelListeners.add(listener);
+
+        if (mModel != null) {
+        	updateModel();
+        }
     }
 
     void removeModelListener(final ModelListener listener) {

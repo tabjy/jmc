@@ -25,7 +25,7 @@ public class AncestorViewer extends BaseViewer {
     private final Text mInput;
     private final MemoryStatisticsTableViewer mTableViewer;
 
-    private String mPrefix = "";
+    private String mPrefix = ""; //$NON-NLS-1$
 
     private RefChainElement lastRef;
     private MemoryStatisticsItem lastItem;
@@ -143,12 +143,12 @@ public class AncestorViewer extends BaseViewer {
                     if (mTableViewer.getSelection().isEmpty()) {
                         return;
                     }
+
                     IStructuredSelection selection = (IStructuredSelection) mTableViewer.getSelection();
                     MemoryStatisticsItem item = (MemoryStatisticsItem) selection.getFirstElement();
                     if (item.getId() == null) {
                         return;
                     }
-
 
                     mFilterList.addFilter(new Predicate<RefChainElement>() {
                         final String ancestor = item.getId().toString();
@@ -168,7 +168,7 @@ public class AncestorViewer extends BaseViewer {
 
                         @Override
                         public String toString() {
-                            return "Ancestors" + (excluded ? " \u220C " : " \u220B ") + ancestor;
+                            return "Ancestors" + (excluded ? " \u220C " : " \u220B ") + ancestor; //$NON-NLS-2$ //$NON-NLS-3$
                         }
 
                         @Override
@@ -288,7 +288,7 @@ public class AncestorViewer extends BaseViewer {
     @Override
     public void reset() {
         mFilterList.reset();
-        mInput.setText("");
+        mInput.setText(""); //$NON-NLS-1$
         updatePrefixFilter();
     }
 }

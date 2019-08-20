@@ -103,6 +103,7 @@ public class PieChart extends Canvas {
         return null;
     }
 
+    // Get item via a (x, y) coordinate on the canvas. Useful for handling mouse events.
     public ArcItem getItem(Point point) {
         int x = this.getClientArea().width / 2;
         int y = this.getClientArea().height / 2;

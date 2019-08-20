@@ -44,7 +44,7 @@ public class JOverflowPlugin extends MCAbstractUIPlugin {
 	// The plug-in ID
 	private static final String PLUGIN_ID = "org.openjdk.jmc.joverflow.ui"; //$NON-NLS-1$
 
-	public static final String ICON_UNDO_EDIT = "undo_edit.gif"; //$NON-NLS-1$
+	static final String ICON_UNDO_EDIT = "undo_edit.gif"; //$NON-NLS-1$
 
 	// The shared instance
 	private static JOverflowPlugin m_plugin;

@@ -31,7 +31,6 @@ class ReferrerTreeViewer extends TableViewer {
         mContentProvider.setFilter(element -> ((ReferrerItem) element).getSize() > 0);
         setContentProvider(mContentProvider);
 
-        // TODO: change to a conversion method (from B to KB) that's not so primitive
         createTreeViewerColumn("Referrer",
                 ReferrerItem::getName,
                 (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()),
