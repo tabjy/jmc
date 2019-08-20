@@ -5,7 +5,6 @@ import org.eclipse.jface.viewers.deferred.DeferredContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
@@ -21,7 +20,7 @@ class ReferrerTreeViewer extends TableViewer {
     private long mHeapSize;
 
     private TreeViewerColumnComparator mActiveColumnComparator;
-    private DeferredContentProvider mContentProvider;
+    private final DeferredContentProvider mContentProvider;
 
     ReferrerTreeViewer(Composite parent, int style) {
         super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
@@ -104,7 +103,7 @@ class ReferrerTreeViewer extends TableViewer {
             }
         };
 
-        cmp.init(this, column, sort);
+        cmp.init(column, sort);
     }
 
     void setHeapSize(long size) {
@@ -114,11 +113,9 @@ class ReferrerTreeViewer extends TableViewer {
     abstract class TreeViewerColumnComparator implements Comparator {
         private boolean decreasing = true;
 
-        ColumnViewer mViewer;
         TableViewerColumn mColumn;
 
-        void init(ColumnViewer viewer, TableViewerColumn column, boolean sorted) {
-            mViewer = viewer;
+        void init(TableViewerColumn column, boolean sorted) {
             mColumn = column;
 
             mColumn.getColumn().addSelectionListener(new SelectionAdapter() {

@@ -5,9 +5,9 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 
 public class BaseArcAttributeProvider implements IArcAttributeProvider {
-    private ListenerList<IArcAttributeProviderListener> mListenerList = new ListenerList<>();
+    private final ListenerList<IArcAttributeProviderListener> mListenerList = new ListenerList<>();
 
-    protected final Color[] COLORS = {
+    private final Color[] COLORS = {
             new Color(Display.getDefault(), 250, 206, 210), // red
             new Color(Display.getDefault(), 185, 214, 255), // blue
             new Color(Display.getDefault(), 229, 229, 229), // grey

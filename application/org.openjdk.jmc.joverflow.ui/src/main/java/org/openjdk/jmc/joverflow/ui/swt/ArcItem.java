@@ -7,8 +7,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Item;
 
 public class ArcItem extends Item {
-    private PieChart mParent;
-    private int mStyle;
+    private final PieChart mParent;
+    private final int mStyle;
 
     private int mAngle = 0;
     private Color mColor;

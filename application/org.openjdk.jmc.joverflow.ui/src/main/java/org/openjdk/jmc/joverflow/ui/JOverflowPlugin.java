@@ -42,7 +42,7 @@ import org.openjdk.jmc.ui.MCAbstractUIPlugin;
 public class JOverflowPlugin extends MCAbstractUIPlugin {
 
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.openjdk.jmc.joverflow.ui"; //$NON-NLS-1$
+	private static final String PLUGIN_ID = "org.openjdk.jmc.joverflow.ui"; //$NON-NLS-1$
 
 	public static final String ICON_UNDO_EDIT = "undo_edit.gif"; //$NON-NLS-1$
 

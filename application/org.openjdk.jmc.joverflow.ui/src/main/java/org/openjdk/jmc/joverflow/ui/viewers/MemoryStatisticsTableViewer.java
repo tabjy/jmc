@@ -18,9 +18,9 @@ import java.util.function.Function;
 class MemoryStatisticsTableViewer extends TableViewer {
 
 	private long mHeapSize;
-	private TableViewerColumn mPrimaryColumn;
+	private final TableViewerColumn mPrimaryColumn;
 	private TableViewerColumnComparator mActiveColumnComparator;
-	private DeferredContentProvider mContentProvider;
+	private final DeferredContentProvider mContentProvider;
 
 	MemoryStatisticsTableViewer(Composite parent, int style, Function<MemoryStatisticsItem, Color> colorProvider) {
 		super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
@@ -109,7 +109,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
 			}
 		};
 
-		cmp.init(this, column, sort);
+		cmp.init(column, sort);
 
 		return column;
 	}
@@ -121,11 +121,9 @@ class MemoryStatisticsTableViewer extends TableViewer {
 	abstract class TableViewerColumnComparator implements Comparator {
 		private boolean decreasing = true;
 
-		ColumnViewer mViewer;
 		TableViewerColumn mColumn;
 
-		void init(ColumnViewer viewer, TableViewerColumn column, boolean sorted) {
-			mViewer = viewer;
+		void init(TableViewerColumn column, boolean sorted) {
 			mColumn = column;
 
 			mColumn.getColumn().addSelectionListener(new SelectionAdapter() {
