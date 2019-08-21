@@ -56,7 +56,7 @@ import org.openjdk.jmc.ui.common.util.Filename;
 import org.openjdk.jmc.ui.misc.DialogToolkit;
 import org.openjdk.jmc.ui.misc.DisplayToolkit;
 
-class HeapDumpAction implements IActionFactory {
+public class HeapDumpAction implements IActionFactory {
 
 	private final static String DEFAULT_FILENAME = "dump_"; //$NON-NLS-1$
 	private final static String HPROF_FILE_EXTENSION = "hprof"; //$NON-NLS-1$
