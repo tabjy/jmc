@@ -22,7 +22,7 @@ import java.util.function.Function;
 // ReferrerTreeViewer is actually a TableViewer with its tree-like content
 class ReferrerTreeViewer extends TableViewer {
 
-	private long mHeapSize;
+	private long mHeapSize = 1;
 
 	private TreeViewerColumnComparator mActiveColumnComparator;
 	private final DeferredContentProvider mContentProvider;

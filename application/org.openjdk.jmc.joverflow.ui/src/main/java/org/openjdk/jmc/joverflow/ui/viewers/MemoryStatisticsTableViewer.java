@@ -22,7 +22,7 @@ import java.util.function.Function;
 
 class MemoryStatisticsTableViewer extends TableViewer {
 
-	private long mHeapSize;
+	private long mHeapSize = 1;
 	private final TableViewerColumn mPrimaryColumn;
 	private TableViewerColumnComparator mActiveColumnComparator;
 	private final DeferredContentProvider mContentProvider;

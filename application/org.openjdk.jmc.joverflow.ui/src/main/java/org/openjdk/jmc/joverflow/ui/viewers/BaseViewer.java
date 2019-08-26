@@ -10,7 +10,6 @@ import org.openjdk.jmc.joverflow.ui.util.FilterChangedListener;
 // Base class for 4 main viewers
 abstract public class BaseViewer extends ContentViewer implements ModelListener {
 	private final ListenerList<FilterChangedListener> mListeners = new ListenerList<>();
-	private long mHeapSize;
 
 	public void addFilterChangedListener(FilterChangedListener listener) {
 		mListeners.add(listener);
@@ -26,13 +25,7 @@ abstract public class BaseViewer extends ContentViewer implements ModelListener 
 		}
 	}
 
-	public void setHeapSize(long size) {
-		mHeapSize = size;
-	}
-
-	public long getHeapSize() {
-		return mHeapSize;
-	}
+	abstract public void setHeapSize(long size);
 
 	public boolean filter(ObjectCluster oc) {
 		return true;

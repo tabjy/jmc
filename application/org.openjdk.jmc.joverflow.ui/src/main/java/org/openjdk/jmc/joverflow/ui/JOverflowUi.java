@@ -30,8 +30,6 @@ public class JOverflowUi extends Composite {
 
 	private final List<ModelListener> mModelListeners = new ArrayList<>();
 
-	private boolean mIsUpdatingModel;
-
 	public JOverflowUi(Composite parent, int style) {
 		super(parent, style);
 		this.setLayout(new FillLayout());
@@ -105,13 +103,6 @@ public class JOverflowUi extends Composite {
 	}
 
 	private void updateModel() {
-		if (mIsUpdatingModel) {
-			// skip updating if busy
-			return;
-		}
-
-		mIsUpdatingModel = true;
-
 		ClusterType currentType = mOverheadTypeViewer.getCurrentType();
 
 		mClusterGroupViewer.setQualifierName(
@@ -126,7 +117,6 @@ public class JOverflowUi extends Composite {
 				for (ObjectCluster oc : chain) {
 					// Check filters for object clusters
 					if (mClusterGroupViewer.filter(oc)) {
-//                    if (mClusterGroupViewer.getFilter().test(oc)) {
 						// Add object cluster to type-viewer regardless of type
 						mOverheadTypeViewer.include(oc, rce);
 						// Add type object cluster matches current type and add to all other viewers
@@ -152,19 +142,14 @@ public class JOverflowUi extends Composite {
 		for (ModelListener l : mModelListeners) {
 			l.allIncluded();
 		}
-
-		mIsUpdatingModel = false;
 	}
 
 	void reset() {
-		mIsUpdatingModel = true;
-
 		mOverheadTypeViewer.reset();
 		mReferrerViewer.reset();
 		mClusterGroupViewer.reset();
 		mAncestorViewer.reset();
 
-		mIsUpdatingModel = false;
 		updateModel();
 	}
 
