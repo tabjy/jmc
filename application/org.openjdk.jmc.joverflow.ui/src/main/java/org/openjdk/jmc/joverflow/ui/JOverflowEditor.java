@@ -39,12 +39,10 @@ import org.eclipse.jface.dialogs.ProgressIndicator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
-
 import org.eclipse.ui.IPathEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.widgets.Form;
@@ -60,225 +58,225 @@ import org.openjdk.jmc.ui.misc.DialogToolkit;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.List;
 
 public class JOverflowEditor extends EditorPart {
-    private final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
+	private final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
 
-    private FormToolkit mFormToolkit;
+	private FormToolkit mFormToolkit;
 
-    private Composite mParentComposite;
-    private ProgressIndicator mProgressIndicator;
-    private JOverflowUi mJOverflowUi;
+	private Composite mParentComposite;
+	private ProgressIndicator mProgressIndicator;
+	private JOverflowUi mJOverflowUi;
 
-    private ModelLoader mLoader;
-    private Snapshot mSnapshot;
-    private Collection<ReferenceChain> mModel;
-    
-    private final List<UiLoadedListener> mUiLoadedListeners = new ArrayList<>();
+	private ModelLoader mLoader;
+	private Snapshot mSnapshot;
+	private Collection<ReferenceChain> mModel;
 
-    @Override
-    public void init(IEditorSite site, IEditorInput input) throws PartInitException {
-        setSite(site);
-        setInput(input);
+	private final List<UiLoadedListener> mUiLoadedListeners = new ArrayList<>();
 
-        IPathEditorInput ipei;
-        if (input instanceof IPathEditorInput) {
-            ipei = (IPathEditorInput) input;
-        } else {
-            ipei = input.getAdapter(IPathEditorInput.class);
-        }
+	@Override
+	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
+		setSite(site);
+		setInput(input);
 
-        if (ipei == null) {
-            // Not likely to be null, but guard just in case
-            throw new PartInitException("The JOverflow editor cannot handle the provided editor input"); //$NON-NLS-1$
-        }
+		IPathEditorInput ipei;
+		if (input instanceof IPathEditorInput) {
+			ipei = (IPathEditorInput) input;
+		} else {
+			ipei = input.getAdapter(IPathEditorInput.class);
+		}
 
-        loadModel(ipei);
-    }
+		if (ipei == null) {
+			// Not likely to be null, but guard just in case
+			throw new PartInitException("The JOverflow editor cannot handle the provided editor input"); //$NON-NLS-1$
+		}
 
-    private void loadModel(final IPathEditorInput input) {
-        if (mLoader != null) {
-            mLoader.cancel();
-            mLoader = null;
-        }
+		loadModel(ipei);
+	}
 
-        if (mSnapshot != null) {
-            mSnapshot.discard();
-            mSnapshot = null;
-        }
+	private void loadModel(final IPathEditorInput input) {
+		if (mLoader != null) {
+			mLoader.cancel();
+			mLoader = null;
+		}
 
-        setPartName(input.getName());
+		if (mSnapshot != null) {
+			mSnapshot.discard();
+			mSnapshot = null;
+		}
 
-        String inputPath = input.getPath().toOSString();
-        mLoader = new ModelLoader(inputPath, new ModelLoaderListener() {
-            private double worked = 0; // the amount of work already done
+		setPartName(input.getName());
 
-            @Override
-            public void onProgressUpdate(final double progress) {
-                updateUi(progress);
-            }
+		String inputPath = input.getPath().toOSString();
+		mLoader = new ModelLoader(inputPath, new ModelLoaderListener() {
+			private double worked = 0; // the amount of work already done
 
-            @Override
-            public void onModelLoaded(Snapshot snapshot, final Collection<ReferenceChain> model) {
-                mSnapshot = snapshot;
-                mModel = model;
+			@Override
+			public void onProgressUpdate(final double progress) {
+				updateUi(progress);
+			}
 
-                updateUi(1);
-                getSite().getShell().getDisplay().asyncExec(() -> {
-                    for (Control child : mParentComposite.getChildren()) {
-                        child.dispose();
-                    }
+			@Override
+			public void onModelLoaded(Snapshot snapshot, final Collection<ReferenceChain> model) {
+				mSnapshot = snapshot;
+				mModel = model;
 
-                    createJoverflowUi(mParentComposite);
-                    mJOverflowUi.setModel(mModel);
-                });
-            }
+				updateUi(1);
+				getSite().getShell().getDisplay().asyncExec(() -> {
+					for (Control child : mParentComposite.getChildren()) {
+						child.dispose();
+					}
 
-            @Override
-            public void onModelLoadFailed(final Throwable failure) {
-                getSite().getShell().getDisplay().asyncExec(() -> {
-                    String message = failure.getLocalizedMessage();
-                    DialogToolkit.showException(getSite().getShell(), "Could not open " + inputPath, message, failure);
-                    getSite().getPage().closeEditor(JOverflowEditor.this, false);
-                });
-            }
+					createJoverflowUi(mParentComposite);
+					mJOverflowUi.setModel(mModel);
+				});
+			}
 
-            private void updateUi(final double progress) {
-                getSite().getShell().getDisplay().asyncExec(() -> {
-                	if (mProgressIndicator == null || mProgressIndicator.isDisposed()) {
-                        return;
-                    }
+			@Override
+			public void onModelLoadFailed(final Throwable failure) {
+				getSite().getShell().getDisplay().asyncExec(() -> {
+					String message = failure.getLocalizedMessage();
+					DialogToolkit.showException(getSite().getShell(), "Could not open " + inputPath, message, failure);
+					getSite().getPage().closeEditor(JOverflowEditor.this, false);
+				});
+			}
 
-                	// in case of overflow
-                    if (progress < worked) {
-                        mProgressIndicator.beginTask(1);
-                        worked = 0;
-                    }
+			private void updateUi(final double progress) {
+				getSite().getShell().getDisplay().asyncExec(() -> {
+					if (mProgressIndicator == null || mProgressIndicator.isDisposed()) {
+						return;
+					}
 
-                    mProgressIndicator.worked(progress - worked);
-                    worked = progress;
-                });
-            }
-        });
+					// in case of overflow
+					if (progress < worked) {
+						mProgressIndicator.beginTask(1);
+						worked = 0;
+					}
 
-        EXECUTOR_SERVICE.submit(mLoader);
-    }
+					mProgressIndicator.worked(progress - worked);
+					worked = progress;
+				});
+			}
+		});
 
-    @Override
-    public void createPartControl(Composite parent) {
-        mParentComposite = parent;
+		EXECUTOR_SERVICE.submit(mLoader);
+	}
 
-        mFormToolkit = new FormToolkit(FlightRecorderUI.getDefault().getFormColors(Display.getCurrent()));
-        mFormToolkit.setBorderStyle(SWT.NULL);
+	@Override
+	public void createPartControl(Composite parent) {
+		mParentComposite = parent;
 
-        createProgressIndicator(parent);
-    }
+		mFormToolkit = new FormToolkit(FlightRecorderUI.getDefault().getFormColors(Display.getCurrent()));
+		mFormToolkit.setBorderStyle(SWT.NULL);
 
-    private void createProgressIndicator(Composite parent) {
-        mProgressIndicator = CompositeToolkit.createWaitIndicator(mFormToolkit.createComposite(parent), mFormToolkit);
-        mProgressIndicator.beginTask(1);
-    }
+		createProgressIndicator(parent);
+	}
 
-    private void createJoverflowUi(Composite parent) {
-        Form mForm = mFormToolkit.createForm(parent);
-        mForm.setText("JOverflow");
-        mForm.setImage(getTitleImage());
-        mFormToolkit.decorateFormHeading(mForm);
+	private void createProgressIndicator(Composite parent) {
+		mProgressIndicator = CompositeToolkit.createWaitIndicator(mFormToolkit.createComposite(parent), mFormToolkit);
+		mProgressIndicator.beginTask(1);
+	}
 
-        IToolBarManager manager = mForm.getToolBarManager();
-        manager.add((new Action("Reset") {
-            {
-                setImageDescriptor(JOverflowPlugin.getDefault().getMCImageDescriptor(JOverflowPlugin.ICON_UNDO_EDIT));
-            }
+	private void createJoverflowUi(Composite parent) {
+		Form mForm = mFormToolkit.createForm(parent);
+		mForm.setText("JOverflow");
+		mForm.setImage(getTitleImage());
+		mFormToolkit.decorateFormHeading(mForm);
 
-            @Override
-            public void run() {
-                mJOverflowUi.reset();
-            }
-        }));
-        mForm.updateToolBar();
+		IToolBarManager manager = mForm.getToolBarManager();
+		manager.add((new Action("Reset") {
+			{
+				setImageDescriptor(JOverflowPlugin.getDefault().getMCImageDescriptor(JOverflowPlugin.ICON_UNDO_EDIT));
+			}
 
-        Composite body = mForm.getBody();
-        body.setLayout(new FillLayout());
+			@Override
+			public void run() {
+				mJOverflowUi.reset();
+			}
+		}));
+		mForm.updateToolBar();
 
-        mJOverflowUi = new JOverflowUi(body, SWT.NONE);
-        
-        for (UiLoadedListener l : mUiLoadedListeners) {
-        	l.uiLoaded(mJOverflowUi);
-        }
-    }
+		Composite body = mForm.getBody();
+		body.setLayout(new FillLayout());
 
-    @Override
-    public void dispose() {
-        super.dispose();
+		mJOverflowUi = new JOverflowUi(body, SWT.NONE);
 
-        if (mLoader != null) {
-            mLoader.cancel();
-        }
+		for (UiLoadedListener l : mUiLoadedListeners) {
+			l.uiLoaded(mJOverflowUi);
+		}
+	}
 
-        if (mSnapshot != null) {
-            mSnapshot.discard();
-        }
-    }
+	@Override
+	public void dispose() {
+		super.dispose();
 
-    @Override
-    public void setFocus() {
-    	if (mJOverflowUi != null) {
-    		mJOverflowUi.setFocus();
-    		return;
-    	}
-    	
-    	if (mProgressIndicator != null) {
-    		mProgressIndicator.setFocus();
-    		return;
-    	}
-    	
-    	mParentComposite.setFocus();
-    }
+		if (mLoader != null) {
+			mLoader.cancel();
+		}
 
-    @Override
-    public void doSave(IProgressMonitor monitor) {
-        // no op
-    }
+		if (mSnapshot != null) {
+			mSnapshot.discard();
+		}
+	}
 
-    @Override
-    public void doSaveAs() {
-        // no op
-    }
+	@Override
+	public void setFocus() {
+		if (mJOverflowUi != null) {
+			mJOverflowUi.setFocus();
+			return;
+		}
 
-    @Override
-    public boolean isDirty() {
-        return false;
-    }
+		if (mProgressIndicator != null) {
+			mProgressIndicator.setFocus();
+			return;
+		}
 
-    @Override
-    public boolean isSaveAsAllowed() {
-        return false;
-    }
+		mParentComposite.setFocus();
+	}
 
-    JOverflowUi getJOverflowUi() {
-        return mJOverflowUi;
-    }
+	@Override
+	public void doSave(IProgressMonitor monitor) {
+		// no op
+	}
 
-    Snapshot getSnapshot() {
-        return mSnapshot;
-    }
-    
-    void addUiLoadedListener(UiLoadedListener listener) {
-    	mUiLoadedListeners.add(listener);
-    	if (mJOverflowUi != null) {
-    		listener.uiLoaded(mJOverflowUi);
-    	}
-    }
-    
-    void removeUiLoadedListener(UiLoadedListener listener) {
-    	mUiLoadedListeners.remove(listener);
-    }
-    
-    interface UiLoadedListener {
-    	void uiLoaded(JOverflowUi ui);
-    }
+	@Override
+	public void doSaveAs() {
+		// no op
+	}
+
+	@Override
+	public boolean isDirty() {
+		return false;
+	}
+
+	@Override
+	public boolean isSaveAsAllowed() {
+		return false;
+	}
+
+	JOverflowUi getJOverflowUi() {
+		return mJOverflowUi;
+	}
+
+	Snapshot getSnapshot() {
+		return mSnapshot;
+	}
+
+	void addUiLoadedListener(UiLoadedListener listener) {
+		mUiLoadedListeners.add(listener);
+		if (mJOverflowUi != null) {
+			listener.uiLoaded(mJOverflowUi);
+		}
+	}
+
+	void removeUiLoadedListener(UiLoadedListener listener) {
+		mUiLoadedListeners.remove(listener);
+	}
+
+	interface UiLoadedListener {
+		void uiLoaded(JOverflowUi ui);
+	}
 }

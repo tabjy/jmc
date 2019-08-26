@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * 
+ *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * The contents of this file are subject to the terms of either the Universal Permissive License
@@ -10,17 +10,17 @@
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted
  * provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions
  * and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of
  * conditions and the following disclaimer in the documentation and/or other materials provided with
  * the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its contributors may be used to
  * endorse or promote products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
@@ -32,17 +32,11 @@
  */
 package org.openjdk.jmc.joverflow.ui;
 
-import java.io.File;
-
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
-
 import org.openjdk.jmc.common.io.IOToolkit;
 import org.openjdk.jmc.rjmx.IConnectionHandle;
 import org.openjdk.jmc.rjmx.IServerHandle;
@@ -55,6 +49,10 @@ import org.openjdk.jmc.ui.common.jvm.JVMDescriptor;
 import org.openjdk.jmc.ui.common.util.Filename;
 import org.openjdk.jmc.ui.misc.DialogToolkit;
 import org.openjdk.jmc.ui.misc.DisplayToolkit;
+
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+import java.io.File;
 
 public class HeapDumpAction implements IActionFactory {
 
@@ -82,7 +80,8 @@ public class HeapDumpAction implements IActionFactory {
 					MBeanServerConnection connection = connector.getServiceOrThrow(MBeanServerConnection.class);
 					Object[] params = new Object[] {opener.file.getAbsolutePath(), Boolean.TRUE};
 					String[] sig = new String[] {String.class.getName(), boolean.class.getName()};
-					connection.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"), "dumpHeap", params, sig); //$NON-NLS-1$ //$NON-NLS-2$
+					connection.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"), "dumpHeap", params,
+							sig); //$NON-NLS-1$ //$NON-NLS-2$
 					DisplayToolkit.safeAsyncExec(opener);
 				}
 			} catch (Exception e) {
@@ -91,8 +90,8 @@ public class HeapDumpAction implements IActionFactory {
 					root = root.getCause();
 				}
 				final String message = root.getMessage() != null ? root.getMessage() : root.toString();
-				DisplayToolkit.safeAsyncExec(() -> DialogToolkit.showError(Display.getCurrent().getActiveShell(),
-						"Failed to create Heap Dump", message));
+				DisplayToolkit.safeAsyncExec(() -> DialogToolkit
+						.showError(Display.getCurrent().getActiveShell(), "Failed to create Heap Dump", message));
 			} finally {
 				IOToolkit.closeSilently(connector);
 			}
@@ -139,6 +138,5 @@ public class HeapDumpAction implements IActionFactory {
 			});
 			return opener;
 		}
-
 	}
 }

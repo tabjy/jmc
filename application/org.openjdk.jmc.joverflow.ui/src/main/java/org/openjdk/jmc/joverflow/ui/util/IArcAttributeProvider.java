@@ -4,15 +4,15 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.graphics.Color;
 
 public interface IArcAttributeProvider {
-    int getWeight(Object element);
+	int getWeight(Object element);
 
-    Color getColor(Object element);
+	Color getColor(Object element);
 
-    void addListener(IArcAttributeProviderListener listener);
+	void addListener(IArcAttributeProviderListener listener);
 
-    void dispose();
+	void dispose();
 
-    void removeListener(IArcAttributeProviderListener listener);
+	void removeListener(IArcAttributeProviderListener listener);
 
-    ListenerList<IArcAttributeProviderListener> getListenerList();
+	ListenerList<IArcAttributeProviderListener> getListenerList();
 }

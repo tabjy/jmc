@@ -37,60 +37,59 @@ package org.openjdk.jmc.joverflow.ui.model;
  * {@code id}
  */
 public class MemoryStatisticsItem {
-    private final Object id;
-    private Integer index;
+	private final Object id;
+	private Integer index;
 
-    private long mOverhead;
-    private long mMemory;
-    private int mSize;
+	private long mOverhead;
+	private long mMemory;
+	private int mSize;
 
-    public MemoryStatisticsItem(Object id, long memory, long ovhd, int size) {
-        this.id = id;
-    }
+	public MemoryStatisticsItem(Object id, long memory, long ovhd, int size) {
+		this.id = id;
+	}
 
-    public long getOverhead() {
-        return mOverhead;
-    }
+	public long getOverhead() {
+		return mOverhead;
+	}
 
-    public long getMemory() {
-        return mMemory;
-    }
+	public long getMemory() {
+		return mMemory;
+	}
 
-    public int getSize() {
-        return mSize;
-    }
+	public int getSize() {
+		return mSize;
+	}
 
-    public void reset() {
-        mOverhead = 0;
-        mMemory = 0;
-        mSize = 0;
-    }
+	public void reset() {
+		mOverhead = 0;
+		mMemory = 0;
+		mSize = 0;
+	}
 
-    public String getName() {
-        return id == null ? "N/A" : id.toString(); //$NON-NLS-1$
-    }
+	public String getName() {
+		return id == null ? "N/A" : id.toString(); //$NON-NLS-1$
+	}
 
-    public void addObjectCluster(ObjectCluster oc) {
-        mOverhead += oc.getOverhead();
-        mMemory += oc.getMemory();
-        mSize += oc.getObjectCount();
-    }
+	public void addObjectCluster(ObjectCluster oc) {
+		mOverhead += oc.getOverhead();
+		mMemory += oc.getMemory();
+		mSize += oc.getObjectCount();
+	}
 
-    public void setIndex(int index) {
-        this.index = index;
-    }
+	public void setIndex(int index) {
+		this.index = index;
+	}
 
-    public Integer getIndex() {
-        return index;
-    }
+	public Integer getIndex() {
+		return index;
+	}
 
-    public Object getId() {
-        return id;
-    }
+	public Object getId() {
+		return id;
+	}
 
-    @Override
-    public String toString() {
-        return getName();
-    }
-
+	@Override
+	public String toString() {
+		return getName();
+	}
 }

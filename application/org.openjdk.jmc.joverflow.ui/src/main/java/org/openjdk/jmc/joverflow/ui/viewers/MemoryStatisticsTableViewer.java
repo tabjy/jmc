@@ -1,6 +1,8 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
-import org.eclipse.jface.viewers.*;
+import org.eclipse.jface.viewers.OwnerDrawLabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.deferred.DeferredContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -8,7 +10,10 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Widget;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 
 import java.util.Comparator;
@@ -26,7 +31,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
 		super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
 
 		// FIXME: Bug 165637 - [Viewers] ArrayIndexOutOfBoundsException exception in ConcurrentTableUpdator (used in DeferredContentProvider)
-        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=165637
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=165637
 		mContentProvider = new DeferredContentProvider((lhs, rhs) -> 0);
 		mContentProvider.setFilter(element -> ((MemoryStatisticsItem) element).getSize() > 0);
 		setContentProvider(mContentProvider);
@@ -49,8 +54,9 @@ class MemoryStatisticsTableViewer extends TableViewer {
 		getTable().setHeaderVisible(true);
 	}
 
-	private TableViewerColumn createTableColumnViewer(String label,
-			Function<MemoryStatisticsItem, String> labelProvider, Function<MemoryStatisticsItem, Color> colorProvider,
+	private TableViewerColumn createTableColumnViewer(
+			String label, Function<MemoryStatisticsItem, String> labelProvider,
+			Function<MemoryStatisticsItem, Color> colorProvider,
 			BiFunction<MemoryStatisticsItem, MemoryStatisticsItem, Integer> comparator, boolean sort) {
 		TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
 		column.getColumn().setWidth(200);
@@ -64,7 +70,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
 
 				if (element == null) {
 					// FIXME: Bug 146799 - Blank last table item on virtual table
-                	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
+					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
 					return;
 				}
 				Rectangle bounds = ((TableItem) item).getBounds(event.index);
@@ -85,7 +91,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
 				}
 
 				event.gc.drawString(labelProvider.apply((MemoryStatisticsItem) element), dx, bounds.y + margin, true);
-				
+
 				event.gc.setBackground(bg);
 				event.gc.setForeground(fg);
 			}

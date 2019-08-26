@@ -35,7 +35,6 @@ package org.openjdk.jmc.joverflow.ui.model;
 import java.util.List;
 
 import org.openjdk.jmc.joverflow.support.RefChainElement;
-import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 
 /**
  * Aggregates a number of referrers with a the same initial referrer chain Holds overhead/memory/size for the

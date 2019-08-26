@@ -20,94 +20,95 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 public class JavaThingPage extends Page implements ModelListener {
-    private final JOverflowEditor mEditor;
-    private JavaThingTreeViewer mTreeViewer;
+	private final JOverflowEditor mEditor;
+	private JavaThingTreeViewer mTreeViewer;
 
-    private static final int MAX = 500;
-    private final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(1);
+	private static final int MAX = 500;
+	private final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(1);
 
-    private FutureTask<Void> mCurrentTask;
-    private final int[] mObjects = new int[MAX];
-    private int mObjectsInArray;
-    private int mTotalInstancesCount;    
-    private boolean mTaskCancelled = false;
+	private FutureTask<Void> mCurrentTask;
+	private final int[] mObjects = new int[MAX];
+	private int mObjectsInArray;
+	private int mTotalInstancesCount;
+	private boolean mTaskCancelled = false;
 
-    JavaThingPage(JOverflowEditor editor) {
-        mEditor = editor;
-    }
+	JavaThingPage(JOverflowEditor editor) {
+		mEditor = editor;
+	}
 
-    @Override
-    public void createControl(Composite parent) {
-        mTreeViewer = new JavaThingTreeViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
-    }
+	@Override
+	public void createControl(Composite parent) {
+		mTreeViewer = new JavaThingTreeViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
+	}
 
-    @Override
-    public Control getControl() {
-        return mTreeViewer.getControl();
-    }
+	@Override
+	public Control getControl() {
+		return mTreeViewer.getControl();
+	}
 
-    @Override
-    public void setFocus() {
-        mTreeViewer.getTree().setFocus();
-    }
+	@Override
+	public void setFocus() {
+		mTreeViewer.getTree().setFocus();
+	}
 
-    @Override
-    public void dispose() {
-        EXECUTOR_SERVICE.shutdown();
-        super.dispose();
-    }
+	@Override
+	public void dispose() {
+		EXECUTOR_SERVICE.shutdown();
+		super.dispose();
+	}
 
-    @Override
-    public void include(ObjectCluster oc, RefChainElement ref) {
-        int insertCount = Math.min(oc.getObjectCount(), MAX - mObjectsInArray);
-        for (int i = 0; i < insertCount; i++) {
-            mObjects[mObjectsInArray++] = oc.getGlobalObjectIndex(i);
-        }
-        mTotalInstancesCount += oc.getObjectCount();
-    }
+	@Override
+	public void include(ObjectCluster oc, RefChainElement ref) {
+		int insertCount = Math.min(oc.getObjectCount(), MAX - mObjectsInArray);
+		for (int i = 0; i < insertCount; i++) {
+			mObjects[mObjectsInArray++] = oc.getGlobalObjectIndex(i);
+		}
+		mTotalInstancesCount += oc.getObjectCount();
+	}
 
-    @Override
-    public void allIncluded() {
-        if (mCurrentTask != null) {
-        	mTaskCancelled = true;
-            mCurrentTask.cancel(false);// Don't stop the thread directly. Interruption breaks the atomicity inside getObjectAtGlobalIndex
-        }
+	@Override
+	public void allIncluded() {
+		if (mCurrentTask != null) {
+			mTaskCancelled = true;
+			mCurrentTask
+					.cancel(false);// Don't stop the thread directly. Interruption breaks the atomicity inside getObjectAtGlobalIndex
+		}
 
-        int[] objects = Arrays.copyOf(mObjects, mObjectsInArray);
-        int instanceCount = mTotalInstancesCount;
-        
-        mTreeViewer.setInput(null);
-        
-        mTaskCancelled = false;
-        mCurrentTask = new FutureTask<>(() -> {
-            List<JavaThingItem> items = new ArrayList<>();
-            for (int i : objects) {
-            	if (mTaskCancelled) {
-            		return null;
-            	}
-                JavaHeapObject o = getObjectAtPosition(i);
-                items.add(new JavaThingItem(0, o.idAsString(), o));
-            }
-            if (instanceCount > mObjects.length) {
-                items.add(new JavaThingItem(0, "...", (instanceCount - mObjects.length) + " more instances", 0, null) {
-                    @Override
-                    public String getSize() {
-                        return "";
-                    }
-                });
-            }
-            
-            DisplayToolkit.inDisplayThread().execute(() -> mTreeViewer.setInput(items));
+		int[] objects = Arrays.copyOf(mObjects, mObjectsInArray);
+		int instanceCount = mTotalInstancesCount;
 
-            return null;
-        });
-        EXECUTOR_SERVICE.submit(mCurrentTask);
+		mTreeViewer.setInput(null);
 
-        mObjectsInArray = 0;
-        mTotalInstancesCount = 0;
-    }
+		mTaskCancelled = false;
+		mCurrentTask = new FutureTask<>(() -> {
+			List<JavaThingItem> items = new ArrayList<>();
+			for (int i : objects) {
+				if (mTaskCancelled) {
+					return null;
+				}
+				JavaHeapObject o = getObjectAtPosition(i);
+				items.add(new JavaThingItem(0, o.idAsString(), o));
+			}
+			if (instanceCount > mObjects.length) {
+				items.add(new JavaThingItem(0, "...", (instanceCount - mObjects.length) + " more instances", 0, null) {
+					@Override
+					public String getSize() {
+						return "";
+					}
+				});
+			}
 
-    private JavaHeapObject getObjectAtPosition(int globalObjectPos) {
-        return mEditor.getSnapshot().getObjectAtGlobalIndex(globalObjectPos);
-    }
+			DisplayToolkit.inDisplayThread().execute(() -> mTreeViewer.setInput(items));
+
+			return null;
+		});
+		EXECUTOR_SERVICE.submit(mCurrentTask);
+
+		mObjectsInArray = 0;
+		mTotalInstancesCount = 0;
+	}
+
+	private JavaHeapObject getObjectAtPosition(int globalObjectPos) {
+		return mEditor.getSnapshot().getObjectAtGlobalIndex(globalObjectPos);
+	}
 }

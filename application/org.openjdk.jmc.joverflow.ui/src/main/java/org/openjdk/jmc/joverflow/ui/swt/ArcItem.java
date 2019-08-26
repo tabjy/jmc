@@ -8,92 +8,86 @@ import org.eclipse.swt.widgets.Item;
 
 // An ArcItem represents an arc in a PieChart
 public class ArcItem extends Item {
-    private final PieChart mParent;
-    private final int mStyle;
+	private final PieChart mParent;
+	private final int mStyle;
 
-    private int mAngle = 0;
-    private Color mColor;
+	private int mAngle = 0;
+	private Color mColor;
 
-    public ArcItem(PieChart parent, int style) {
-        this(parent, style, parent.getItemCount());
-    }
+	public ArcItem(PieChart parent, int style) {
+		this(parent, style, parent.getItemCount());
+	}
 
-    public ArcItem(PieChart parent, int style, int index) {
-        super(parent, style, index);
-        this.mParent = parent;
-        this.mStyle = style;
+	public ArcItem(PieChart parent, int style, int index) {
+		super(parent, style, index);
+		this.mParent = parent;
+		this.mStyle = style;
 
-        parent.createItem(this, index);
-    }
+		parent.createItem(this, index);
+	}
 
-    // ArcItem and PieChart doesn't check if sum of all arcs' angle adds to more than 360
-    public void setAngle(int angle) {
-        if (angle < 0) {
-            SWT.error(SWT.ERROR_INVALID_RANGE);
-            return;
-        }
+	// ArcItem and PieChart doesn't check if sum of all arcs' angle adds to more than 360
+	public void setAngle(int angle) {
+		if (angle < 0) {
+			SWT.error(SWT.ERROR_INVALID_RANGE);
+			return;
+		}
 
-        if (angle > 360) {
-            mAngle = angle % 360;
-        } else {
-            mAngle = angle;
-        }
-        mParent.redraw();
-    }
+		if (angle > 360) {
+			mAngle = angle % 360;
+		} else {
+			mAngle = angle;
+		}
+		mParent.redraw();
+	}
 
-    public int getAngle() {
-        return mAngle;
-    }
+	public int getAngle() {
+		return mAngle;
+	}
 
-    public void setColor(Color mColor) {
-        this.mColor = mColor;
-        mParent.redraw();
-    }
+	public void setColor(Color mColor) {
+		this.mColor = mColor;
+		mParent.redraw();
+	}
 
-    public Color getColor() {
-        return mColor;
-    }
+	public Color getColor() {
+		return mColor;
+	}
 
-    void paintArc(GC gc, Point center, int radius, int startAngle, double zoomRatio, boolean paintArcBorder) {
-        if (mAngle < 0) {
-            SWT.error(SWT.ERROR_INVALID_RANGE);
-        }
+	void paintArc(GC gc, Point center, int radius, int startAngle, double zoomRatio, boolean paintArcBorder) {
+		if (mAngle < 0) {
+			SWT.error(SWT.ERROR_INVALID_RANGE);
+		}
 
-        if (mColor != null) {
-            gc.setBackground(this.mColor);
-        }
+		if (mColor != null) {
+			gc.setBackground(this.mColor);
+		}
 
-        int outerRadius = (int) (radius * zoomRatio);
+		int outerRadius = (int) (radius * zoomRatio);
 
-        gc.fillArc(center.x - outerRadius, center.y - outerRadius, outerRadius * 2, outerRadius * 2, startAngle, mAngle);
+		gc.fillArc(center.x - outerRadius, center.y - outerRadius, outerRadius * 2, outerRadius * 2, startAngle,
+				mAngle);
 
-        if (paintArcBorder) {
-            gc.drawArc(center.x - outerRadius, center.y - outerRadius, outerRadius * 2, outerRadius * 2, startAngle, mAngle);
-            if (zoomRatio != 1 && mAngle < 360) {
-                gc.drawLine(
-                        (int) (center.x + Math.cos(Math.toRadians(startAngle)) * radius),
-                        (int) (center.y - Math.sin(Math.toRadians(startAngle)) * radius),
-                        (int) (center.x + Math.cos(Math.toRadians(startAngle)) * outerRadius),
-                        (int) (center.y - Math.sin(Math.toRadians(startAngle)) * outerRadius));
-                gc.drawLine(
-                        (int) (center.x + Math.cos(Math.toRadians(startAngle + mAngle)) * radius),
-                        (int) (center.y - Math.sin(Math.toRadians(startAngle + mAngle)) * radius),
-                        (int) (center.x + Math.cos(Math.toRadians(startAngle + mAngle)) * outerRadius),
-                        (int) (center.y - Math.sin(Math.toRadians(startAngle + mAngle)) * outerRadius));
-            }
-        }
+		if (paintArcBorder) {
+			gc.drawArc(center.x - outerRadius, center.y - outerRadius, outerRadius * 2, outerRadius * 2, startAngle,
+					mAngle);
+			if (zoomRatio != 1 && mAngle < 360) {
+				gc.drawLine((int) (center.x + Math.cos(Math.toRadians(startAngle)) * radius),
+						(int) (center.y - Math.sin(Math.toRadians(startAngle)) * radius),
+						(int) (center.x + Math.cos(Math.toRadians(startAngle)) * outerRadius),
+						(int) (center.y - Math.sin(Math.toRadians(startAngle)) * outerRadius));
+				gc.drawLine((int) (center.x + Math.cos(Math.toRadians(startAngle + mAngle)) * radius),
+						(int) (center.y - Math.sin(Math.toRadians(startAngle + mAngle)) * radius),
+						(int) (center.x + Math.cos(Math.toRadians(startAngle + mAngle)) * outerRadius),
+						(int) (center.y - Math.sin(Math.toRadians(startAngle + mAngle)) * outerRadius));
+			}
+		}
 
-        if ((mStyle & SWT.BORDER) == SWT.BORDER && mAngle < 360) {
-            gc.drawLine(
-                    center.x,
-                    center.y,
-                    (int) (center.x + Math.cos(Math.toRadians(startAngle)) * radius),
-                    (int) (center.y - Math.sin(Math.toRadians(startAngle)) * radius));
-            gc.drawLine(
-                    center.x,
-                    center.y,
-                    (int) (center.x + Math.cos(Math.toRadians(startAngle + mAngle)) * radius),
-                    (int) (center.y - Math.sin(Math.toRadians(startAngle + mAngle)) * radius));
-        }
-    }
+		if ((mStyle & SWT.BORDER) == SWT.BORDER && mAngle < 360) {
+			gc.drawLine(center.x, center.y, (int) (center.x + Math.cos(Math.toRadians(startAngle)) * radius),
+					(int) (center.y - Math.sin(Math.toRadians(startAngle)) * radius));
+			gc.drawLine(center.x, center.y, (int) (center.x + Math.cos(Math.toRadians(startAngle + mAngle)) * radius),
+					(int) (center.y - Math.sin(Math.toRadians(startAngle + mAngle)) * radius));
+		}
+	}
 }
