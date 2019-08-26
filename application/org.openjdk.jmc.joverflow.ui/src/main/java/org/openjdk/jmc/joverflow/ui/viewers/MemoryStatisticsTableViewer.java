@@ -40,16 +40,16 @@ class MemoryStatisticsTableViewer extends TableViewer {
 				(lhs, rhs) -> lhs.getName().compareTo(rhs.getName()), false);
 
 		createTableColumnViewer("Memory KB", model -> String
-						.format("%d (%d%%)", Math.round((double) model.getMemory() / 1024f),
+						.format("%,d (%d%%)", Math.round((double) model.getMemory() / 1024f),
 								Math.round((double) model.getMemory() * 100f / (double) mHeapSize)), null,
 				(lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()), true);
 
 		createTableColumnViewer("Overhead KB", model -> String
-						.format("%d (%d%%)", Math.round((double) model.getOverhead() / 1024f),
+						.format("%,d (%d%%)", Math.round((double) model.getOverhead() / 1024f),
 								Math.round((double) model.getOverhead() * 100f / (double) mHeapSize)), null,
 				(lhs, rhs) -> (int) (lhs.getOverhead() - rhs.getOverhead()), false);
 
-		createTableColumnViewer("Objects", model -> String.valueOf(model.getSize()), null,
+		createTableColumnViewer("Objects", model -> String.format("%,d", model.getSize()), null,
 				(lhs, rhs) -> lhs.getSize() - rhs.getSize(), false);
 
 		getTable().setLinesVisible(true);

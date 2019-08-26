@@ -75,8 +75,6 @@ public class OverheadTypeViewer extends BaseViewer {
 
 	@Override
 	public void setHeapSize(long size) {
-		super.setHeapSize(size);
-
 		mTableViewer.setHeapSize(size);
 	}
 

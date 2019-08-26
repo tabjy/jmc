@@ -40,16 +40,16 @@ class ReferrerTreeViewer extends TableViewer {
 				false, true);
 
 		createTreeViewerColumn("Memory KiB", model -> String
-						.format("%d (%d%%)", Math.round((double) model.getMemory() / 1024f),
+						.format("%,d (%d%%)", Math.round((double) model.getMemory() / 1024f),
 								Math.round((double) model.getMemory() * 100f / (double) mHeapSize)),
 				(lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()), true, false);
 
 		createTreeViewerColumn("Overhead KiB", model -> String
-						.format("%d (%d%%)", Math.round((double) model.getOvhd() / 1024f),
+						.format("%,d (%d%%)", Math.round((double) model.getOvhd() / 1024f),
 								Math.round((double) model.getOvhd() * 100f / (double) mHeapSize)),
 				(lhs, rhs) -> (int) (lhs.getOvhd() - rhs.getOvhd()), false, false);
 
-		createTreeViewerColumn("Objects", model -> String.valueOf(model.getSize()),
+		createTreeViewerColumn("Objects", model -> String.format("%,d", model.getSize()),
 				(lhs, rhs) -> lhs.getSize() - rhs.getSize(), false, false);
 
 		getTable().setLinesVisible(true);

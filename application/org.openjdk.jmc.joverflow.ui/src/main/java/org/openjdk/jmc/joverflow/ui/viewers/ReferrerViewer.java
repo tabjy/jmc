@@ -98,8 +98,6 @@ public class ReferrerViewer extends BaseViewer {
 
 	@Override
 	public void setHeapSize(long size) {
-		super.setHeapSize(size);
-
 		mTreeViewer.setHeapSize(size);
 	}
 
