@@ -81,6 +81,11 @@ public class JOverflowUi extends Composite {
 		}
 
 		hSash.setWeights(new int[] {1, 1});
+
+		mModelListeners.add(mOverheadTypeViewer);
+		mModelListeners.add(mClusterGroupViewer);
+		mModelListeners.add(mReferrerViewer);
+		mModelListeners.add(mAncestorViewer);
 	}
 
 	public void setModel(Collection<ReferenceChain> model) {
@@ -121,10 +126,6 @@ public class JOverflowUi extends Composite {
 						mOverheadTypeViewer.include(oc, rce);
 						// Add type object cluster matches current type and add to all other viewers
 						if (mOverheadTypeViewer.filter(oc)) {
-							mReferrerViewer.include(oc, chain.getReferenceChain());
-							mClusterGroupViewer.include(oc, chain.getReferenceChain());
-							mAncestorViewer.include(oc, chain.getReferenceChain());
-
 							for (ModelListener l : mModelListeners) {
 								l.include(oc, chain.getReferenceChain());
 							}
@@ -135,9 +136,6 @@ public class JOverflowUi extends Composite {
 		}
 
 		// Notify all that update is done
-		mReferrerViewer.allIncluded();
-		mClusterGroupViewer.allIncluded();
-		mAncestorViewer.allIncluded();
 		mOverheadTypeViewer.allIncluded();
 		for (ModelListener l : mModelListeners) {
 			l.allIncluded();
