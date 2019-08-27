@@ -2,11 +2,7 @@ package org.openjdk.jmc.joverflow.ui.util;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ColorIndexedArcAttributeProvider extends BaseArcAttributeProvider {
 	private final Color COLOR_GRAY = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
@@ -14,15 +10,10 @@ public class ColorIndexedArcAttributeProvider extends BaseArcAttributeProvider {
 	private int totalWeight = 0;
 	private int minimumAngle = 0;
 
-	// cache
-	private final Map<Object, Color> colors = new HashMap<>();
-
 	public ColorIndexedArcAttributeProvider() {
 		super();
 
 		addListener((event) -> {
-			disposeColors();
-
 			totalWeight = 0;
 			for (Object e : event.getElements()) {
 				totalWeight += getWeight(e);
@@ -40,23 +31,6 @@ public class ColorIndexedArcAttributeProvider extends BaseArcAttributeProvider {
 			return COLOR_GRAY;
 		}
 
-		return colors.computeIfAbsent(element, (obj) -> {
-			RGB rgb = new RGB((float) (obj.hashCode() % 360), 0.8f, 0.9f);
-			return new Color(Display.getCurrent(), rgb);
-		});
-	}
-
-	@Override
-	public void dispose() {
-		disposeColors();
-		super.dispose();
-	}
-
-	private void disposeColors() {
-		for (Color c : colors.values()) {
-			c.dispose();
-		}
-
-		colors.clear();
+		return super.getColor(element);
 	}
 }
