@@ -279,24 +279,6 @@
 	</Match>
 
 	<!-- === JOverflow === -->
-	<!-- These are ok exit calls for the code to run JOverflow in stand-alone 
-		mode -->
-	<Match>
-		<OR>
-			<Class name="org.openjdk.jmc.joverflow.ui.FXMain" />
-			<Class name="org.openjdk.jmc.joverflow.ui.FXMain$1" />
-		</OR>
-		<Bug pattern="DM_EXIT" />
-	</Match>
-
-	<!-- These are injected by the framework through special annotations, and 
-		will be initialized. -->
-	<Match>
-		<Class name="org.openjdk.jmc.joverflow.ui.JOverflowFxUi" />
-		<Method name="&lt;init&gt;" />
-		<Bug pattern="UR_UNINIT_READ" />
-	</Match>
-
 	<!-- We only sort these instances using compareTo(), and never use them 
 		where equals() can be used -->
 	<Match>
@@ -362,19 +344,7 @@
 		<Method name="run" />
 		<Bug pattern="NN_NAKED_NOTIFY" />
 	</Match>
-	
-	<!-- JOverflow: Fire and forget model loaders. -->
-	<Match>
-		<Class name="org.openjdk.jmc.joverflow.ui.FxMain" />
-		<Method name="start" />
-		<Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" />
-	</Match>
-	<Match>
-		<Class name="org.openjdk.jmc.joverflow.ui.JOverflowEditor" />
-		<Method name="createScene" />
-		<Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" />
-	</Match>
-	
+
 	<!-- JOverflow: Unread public field. May be used in the future. -->
 	<Match>
 		<Class name="org.openjdk.jmc.joverflow.support.CompressibleStringStats" />
