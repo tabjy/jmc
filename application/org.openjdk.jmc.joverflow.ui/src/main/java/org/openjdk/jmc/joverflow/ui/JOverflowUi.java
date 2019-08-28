@@ -82,7 +82,6 @@ public class JOverflowUi extends Composite {
 
 		hSash.setWeights(new int[] {1, 1});
 
-		mModelListeners.add(mOverheadTypeViewer);
 		mModelListeners.add(mClusterGroupViewer);
 		mModelListeners.add(mReferrerViewer);
 		mModelListeners.add(mAncestorViewer);
