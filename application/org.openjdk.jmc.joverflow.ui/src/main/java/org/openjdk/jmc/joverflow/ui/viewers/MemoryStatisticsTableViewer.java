@@ -1,5 +1,6 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.OwnerDrawLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
@@ -15,6 +16,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
+import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 
 import java.util.Comparator;
 import java.util.function.BiFunction;
@@ -36,29 +38,42 @@ class MemoryStatisticsTableViewer extends TableViewer {
 		mContentProvider.setFilter(element -> ((MemoryStatisticsItem) element).getSize() > 0);
 		setContentProvider(mContentProvider);
 
-		mPrimaryColumn = createTableColumnViewer("Name", MemoryStatisticsItem::getName, colorProvider,
-				(lhs, rhs) -> lhs.getName().compareTo(rhs.getName()), false);
+		mPrimaryColumn = createTableColumnViewer("Name", //
+				MemoryStatisticsItem::getName, //
+				null, //
+				colorProvider, (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()), //
+				false);
 
-		createTableColumnViewer("Memory KB", model -> String
-						.format("%,d (%d%%)", Math.round((double) model.getMemory() / 1024f),
-								Math.round((double) model.getMemory() * 100f / (double) mHeapSize)), null,
+		createTableColumnViewer("Memory KB", //
+				model -> String.format("%,.2f (%d%%)", //
+						(double) model.getMemory() / 1024f, //
+						Math.round((double) model.getMemory() * 100f / (double) mHeapSize)), //
+				model -> String.format("%,d Bytes", model.getMemory()), //
+				null, //
 				(lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()), true);
 
-		createTableColumnViewer("Overhead KB", model -> String
-						.format("%,d (%d%%)", Math.round((double) model.getOverhead() / 1024f),
-								Math.round((double) model.getOverhead() * 100f / (double) mHeapSize)), null,
+		createTableColumnViewer("Overhead KB", //
+				model -> String.format("%,.2f (%d%%)", //
+						(double) model.getOverhead() / 1024f, //
+						Math.round((double) model.getOverhead() * 100f / (double) mHeapSize)), //
+				model -> String.format("%,d Bytes", model.getMemory()), //
+				null, //
 				(lhs, rhs) -> (int) (lhs.getOverhead() - rhs.getOverhead()), false);
 
-		createTableColumnViewer("Objects", model -> String.format("%,d", model.getSize()), null,
+		createTableColumnViewer("Objects", //
+				model -> String.format("%,d", model.getSize()), //
+				null, //
+				null, //
 				(lhs, rhs) -> lhs.getSize() - rhs.getSize(), false);
 
 		getTable().setLinesVisible(true);
 		getTable().setHeaderVisible(true);
+		ColumnViewerToolTipSupport.enableFor(this);
 	}
 
 	private TableViewerColumn createTableColumnViewer(
 			String label, Function<MemoryStatisticsItem, String> labelProvider,
-			Function<MemoryStatisticsItem, Color> colorProvider,
+			Function<MemoryStatisticsItem, String> toolTipProvider, Function<MemoryStatisticsItem, Color> colorProvider,
 			BiFunction<MemoryStatisticsItem, MemoryStatisticsItem, Integer> comparator, boolean sort) {
 		TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
 		column.getColumn().setWidth(200);
@@ -106,6 +121,14 @@ class MemoryStatisticsTableViewer extends TableViewer {
 			@Override
 			protected void erase(Event event, Object element) {
 				// no op
+			}
+
+			@Override
+			public String getToolTipText(Object element) {
+				if (toolTipProvider == null) {
+					return super.getToolTipText(element);
+				}
+				return toolTipProvider.apply((MemoryStatisticsItem) element);
 			}
 		});
 

@@ -1,5 +1,6 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.OwnerDrawLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
@@ -36,28 +37,40 @@ class ReferrerTreeViewer extends TableViewer {
 		mContentProvider.setFilter(element -> ((ReferrerItem) element).getSize() > 0);
 		setContentProvider(mContentProvider);
 
-		createTreeViewerColumn("Referrer", ReferrerItem::getName, (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()),
+		createTreeViewerColumn("Referrer", //
+				ReferrerItem::getName, //
+				null, //
+				(lhs, rhs) -> lhs.getName().compareTo(rhs.getName()), //
 				false, true);
 
-		createTreeViewerColumn("Memory KiB", model -> String
-						.format("%,d (%d%%)", Math.round((double) model.getMemory() / 1024f),
-								Math.round((double) model.getMemory() * 100f / (double) mHeapSize)),
-				(lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()), true, false);
+		createTreeViewerColumn("Memory KiB", //
+				model -> String.format("%,.2f (%d%%)", //
+						(double) model.getMemory() / 1024f, //
+						Math.round((double) model.getMemory() * 100f / (double) mHeapSize)), //
+				model -> String.format("%,d Bytes", model.getMemory()), //
+				(lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()), //
+				true, false);
 
-		createTreeViewerColumn("Overhead KiB", model -> String
-						.format("%,d (%d%%)", Math.round((double) model.getOvhd() / 1024f),
-								Math.round((double) model.getOvhd() * 100f / (double) mHeapSize)),
+		createTreeViewerColumn("Overhead KiB", //
+				model -> String.format("%,.2f (%d%%)", //
+						(double) model.getOvhd() / 1024f, //
+						Math.round((double) model.getOvhd() * 100f / (double) mHeapSize)), //
+				model -> String.format("%,d Bytes", model.getOvhd()), //
 				(lhs, rhs) -> (int) (lhs.getOvhd() - rhs.getOvhd()), false, false);
 
-		createTreeViewerColumn("Objects", model -> String.format("%,d", model.getSize()),
-				(lhs, rhs) -> lhs.getSize() - rhs.getSize(), false, false);
+		createTreeViewerColumn("Objects", //
+				model -> String.format("%,d", model.getSize()),//
+				null, //
+				(lhs, rhs) -> lhs.getSize() - rhs.getSize(), //
+				false, false);
 
 		getTable().setLinesVisible(true);
 		getTable().setHeaderVisible(true);
+		ColumnViewerToolTipSupport.enableFor(this);
 	}
 
 	private void createTreeViewerColumn(
-			String label, Function<ReferrerItem, String> labelProvider,
+			String label, Function<ReferrerItem, String> labelProvider, Function<ReferrerItem, String> toolTipProvider,
 			BiFunction<ReferrerItem, ReferrerItem, Integer> comparator, boolean sort, boolean intent) {
 		TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
 		column.getColumn().setWidth(200);
@@ -95,6 +108,14 @@ class ReferrerTreeViewer extends TableViewer {
 			@Override
 			protected void erase(Event event, Object element) {
 				// no op
+			}
+
+			@Override
+			public String getToolTipText(Object element) {
+				if (toolTipProvider == null) {
+					return super.getToolTipText(element);
+				}
+				return toolTipProvider.apply((ReferrerItem) element);
 			}
 		});
 
