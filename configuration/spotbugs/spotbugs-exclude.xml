@@ -133,14 +133,14 @@
 	</Match>
 
 	<!-- The exit command which, obviously, works as advertised. The version
-    command displays version info and exits. These commands are available from
-    JMCs internal command console, and only affects the client. I.e, it is not a
-    remote command. -->
+		command displays version info and exits. These commands are available from
+		JMCs internal command console, and only affects the client. I.e, it is not a
+		remote command. -->
 	<Match>
-    <Or>
-      <Class name="org.openjdk.jmc.commands.internal.executables.Exit" />
-      <Class name="org.openjdk.jmc.commands.internal.executables.Version" />
-    </Or>
+		<Or>
+			<Class name="org.openjdk.jmc.commands.internal.executables.Exit" />
+			<Class name="org.openjdk.jmc.commands.internal.executables.Version" />
+		</Or>
 		<Method name="execute" />
 		<Bug pattern="DM_EXIT" />
 	</Match>
@@ -283,16 +283,16 @@
 	</Match>
 
 	<!-- === JOverflow === -->
-  <Match>
-    <Class name="org.openjdk.jmc.joverflow.Main" />
-    <Or>
-      <Method name="calculateAndFormatStandardStats" />
-      <Method name="getFlagValue" />
-      <Method name="parseNumericFlag" />
-      <Method name="readSnapshot" />
-    </Or>
-    <Bug pattern="DM_EXIT" />
-  </Match>
+	<Match>
+		<Class name="org.openjdk.jmc.joverflow.Main" />
+		<Or>
+			<Method name="calculateAndFormatStandardStats" />
+			<Method name="getFlagValue" />
+			<Method name="parseNumericFlag" />
+			<Method name="readSnapshot" />
+		</Or>
+		<Bug pattern="DM_EXIT" />
+	</Match>
 
 	<!-- We only sort these instances using compareTo(), and never use them
 		where equals() can be used -->
