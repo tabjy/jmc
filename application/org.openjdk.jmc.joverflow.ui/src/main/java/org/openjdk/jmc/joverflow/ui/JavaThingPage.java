@@ -32,6 +32,8 @@ public class JavaThingPage extends Page implements ModelListener {
 	private int mTotalInstancesCount;
 	private boolean mTaskCancelled = false;
 
+	private Object mInput;
+
 	JavaThingPage(JOverflowEditor editor) {
 		mEditor = editor;
 	}
@@ -39,6 +41,7 @@ public class JavaThingPage extends Page implements ModelListener {
 	@Override
 	public void createControl(Composite parent) {
 		mTreeViewer = new JavaThingTreeViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
+		updateInput();
 	}
 
 	@Override
@@ -77,7 +80,7 @@ public class JavaThingPage extends Page implements ModelListener {
 		int[] objects = Arrays.copyOf(mObjects, mObjectsInArray);
 		int instanceCount = mTotalInstancesCount;
 
-		mTreeViewer.setInput(null);
+		updateInput(null);
 
 		mTaskCancelled = false;
 		mCurrentTask = new FutureTask<>(() -> {
@@ -98,7 +101,7 @@ public class JavaThingPage extends Page implements ModelListener {
 				});
 			}
 
-			DisplayToolkit.inDisplayThread().execute(() -> mTreeViewer.setInput(items));
+			DisplayToolkit.inDisplayThread().execute(() -> updateInput(items));
 
 			return null;
 		});
@@ -106,6 +109,17 @@ public class JavaThingPage extends Page implements ModelListener {
 
 		mObjectsInArray = 0;
 		mTotalInstancesCount = 0;
+	}
+
+	private void updateInput() {
+		updateInput(mInput);
+	}
+
+	private void updateInput(Object input) {
+		mInput = input;
+		if (mTreeViewer != null) {
+			mTreeViewer.setInput(mInput);
+		}
 	}
 
 	private JavaHeapObject getObjectAtPosition(int globalObjectPos) {
