@@ -101,10 +101,10 @@
 	</Match>
 	<Match>
 		<Class name="org.openjdk.jmc.ui.polling.PollManager" />
-		<OR>
+		<Or>
 			<Method name="stopIfNotStopped" />
 			<Method name="poll" />
-		</OR>
+		</Or>
 		<Bug pattern="NN_NAKED_NOTIFY" />
 	</Match>
 
@@ -132,11 +132,15 @@
 		<Bug pattern="MS_SHOULD_BE_FINAL" />
 	</Match>
 
-	<!-- The exit command which, obviously, works as advertised. The command 
-		is available from JMCs internal command console, and only affects the client. 
-		I.e, it is not a remote command. -->
+	<!-- The exit command which, obviously, works as advertised. The version
+    command displays version info and exits. These commands are available from
+    JMCs internal command console, and only affects the client. I.e, it is not a
+    remote command. -->
 	<Match>
-		<Class name="org.openjdk.jmc.commands.internal.executables.Exit" />
+    <Or>
+      <Class name="org.openjdk.jmc.commands.internal.executables.Exit" />
+      <Class name="org.openjdk.jmc.commands.internal.executables.Version" />
+    </Or>
 		<Method name="execute" />
 		<Bug pattern="DM_EXIT" />
 	</Match>
@@ -279,7 +283,18 @@
 	</Match>
 
 	<!-- === JOverflow === -->
-	<!-- We only sort these instances using compareTo(), and never use them 
+  <Match>
+    <Class name="org.openjdk.jmc.joverflow.Main" />
+    <Or>
+      <Method name="calculateAndFormatStandardStats" />
+      <Method name="getFlagValue" />
+      <Method name="parseNumericFlag" />
+      <Method name="readSnapshot" />
+    </Or>
+    <Bug pattern="DM_EXIT" />
+  </Match>
+
+	<!-- We only sort these instances using compareTo(), and never use them
 		where equals() can be used -->
 	<Match>
 		<Class name="org.openjdk.jmc.joverflow.support.ClassAndSizeCombo" />
