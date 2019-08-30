@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 public class JavaThingPage extends Page implements ModelListener {
@@ -27,6 +28,7 @@ public class JavaThingPage extends Page implements ModelListener {
 	private final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(1);
 
 	private FutureTask<Void> mCurrentTask;
+	private Future<?> mBackground;
 	private final int[] mObjects = new int[MAX];
 	private int mObjectsInArray;
 	private int mTotalInstancesCount;
@@ -77,6 +79,10 @@ public class JavaThingPage extends Page implements ModelListener {
 					.cancel(false);// Don't stop the thread directly. Interruption breaks the atomicity inside getObjectAtGlobalIndex
 		}
 
+		if (mBackground != null && !mBackground.isDone()) {
+			mBackground.cancel(false);
+		}
+
 		int[] objects = Arrays.copyOf(mObjects, mObjectsInArray);
 		int instanceCount = mTotalInstancesCount;
 
@@ -105,7 +111,7 @@ public class JavaThingPage extends Page implements ModelListener {
 
 			return null;
 		});
-		EXECUTOR_SERVICE.submit(mCurrentTask);
+		mBackground = EXECUTOR_SERVICE.submit(mCurrentTask);
 
 		mObjectsInArray = 0;
 		mTotalInstancesCount = 0;

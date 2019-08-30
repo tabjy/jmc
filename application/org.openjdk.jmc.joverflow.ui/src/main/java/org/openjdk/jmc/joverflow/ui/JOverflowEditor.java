@@ -61,6 +61,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class JOverflowEditor extends EditorPart {
 	private final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
@@ -74,6 +75,7 @@ public class JOverflowEditor extends EditorPart {
 	private ModelLoader mLoader;
 	private Snapshot mSnapshot;
 	private Collection<ReferenceChain> mModel;
+	private Future<?> mBackground;
 
 	private final List<UiLoadedListener> mUiLoadedListeners = new ArrayList<>();
 
@@ -101,6 +103,10 @@ public class JOverflowEditor extends EditorPart {
 		if (mLoader != null) {
 			mLoader.cancel();
 			mLoader = null;
+		}
+
+		if (mBackground != null && !mBackground.isDone()) {
+			mBackground.cancel(true);
 		}
 
 		if (mSnapshot != null) {
@@ -162,7 +168,7 @@ public class JOverflowEditor extends EditorPart {
 			}
 		});
 
-		EXECUTOR_SERVICE.submit(mLoader);
+		mBackground = EXECUTOR_SERVICE.submit(mLoader);
 	}
 
 	@Override
