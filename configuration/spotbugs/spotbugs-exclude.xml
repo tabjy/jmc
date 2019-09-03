@@ -475,6 +475,22 @@
 		<Method name="testIteratingUnvisitedObjects" />
 		<Bug pattern="UC_USELESS_OBJECT" />
 	</Match>
+	<!-- JOverflow test code: VM shutdown. -->
+	<Match>
+		<Class name="examples.VariousIssues" />
+		<Method name="&lt;init&gt;" />
+		<Bug pattern="DM_EXIT" />
+	</Match>
+
+	<!-- JDP test code: VM shutdown. -->
+	<Match>
+		<Class name="org.openjdk.jmc.jdp.ServerTester" />
+		<Or>
+			<Method name="main" />
+			<Method name="createName" />
+		</Or>
+		<Bug pattern="DM_EXIT" />
+	</Match>
 
 	<!-- === Filtering out test classes right now === -->
 	<Match>
