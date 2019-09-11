@@ -39,7 +39,6 @@ public class ClusterGroupViewer extends BaseViewer {
 
 	private String mQualifierName;
 	private final Map<Object, MemoryStatisticsItem> items = new HashMap<>();
-	private final ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 
 	private boolean mAllIncluded = false;
 
@@ -103,7 +102,6 @@ public class ClusterGroupViewer extends BaseViewer {
 
 			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.NONE,
 					(e) -> mPieChart.getArcAttributeProvider().getColor(e));
-			mTableViewer.setInput(mInputModel);
 
 			mTableViewer.getTable().addMouseListener(new MouseListener() {
 				@Override
@@ -224,7 +222,8 @@ public class ClusterGroupViewer extends BaseViewer {
 	public void allIncluded() {
 		Collection<MemoryStatisticsItem> values = items.values();
 
-		mInputModel.setInput(values);
+		((MemoryStatisticsTableViewer.MemoryStatisticsContentProvider) mTableViewer.getContentProvider())
+				.setInput(values);
 		mPieChart.setInput(values);
 
 		mAllIncluded = true;

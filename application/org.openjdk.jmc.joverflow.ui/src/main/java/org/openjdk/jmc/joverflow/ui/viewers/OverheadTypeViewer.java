@@ -16,7 +16,6 @@ public class OverheadTypeViewer extends BaseViewer {
 	private final MemoryStatisticsTableViewer mTableViewer;
 
 	private final MemoryStatisticsItem[] mItems = new MemoryStatisticsItem[ClusterType.values().length];
-	private final ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 	private ClusterType mCurrentType = ClusterType.ALL_OBJECTS;
 
 	private boolean mAllIncluded = false;
@@ -28,7 +27,6 @@ public class OverheadTypeViewer extends BaseViewer {
 
 		mTableViewer = new MemoryStatisticsTableViewer(parent, style | SWT.FULL_SELECTION, null);
 		mTableViewer.setPrimaryColumnText("Object Selection");
-		mTableViewer.setInput(mInputModel);
 
 		mTableViewer.addSelectionChangedListener(event -> setCurrentType(getSelectedType()));
 	}
@@ -69,7 +67,8 @@ public class OverheadTypeViewer extends BaseViewer {
 
 	@Override
 	public void allIncluded() {
-		mInputModel.setInput(mItems);
+		((MemoryStatisticsTableViewer.MemoryStatisticsContentProvider) mTableViewer.getContentProvider())
+				.setInput(mItems);
 		mAllIncluded = true;
 	}
 

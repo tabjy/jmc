@@ -1,10 +1,12 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
+import org.eclipse.jface.viewers.ILazyContentProvider;
 import org.eclipse.jface.viewers.OwnerDrawLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.jface.viewers.deferred.DeferredContentProvider;
+import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -16,41 +18,102 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
-import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 class MemoryStatisticsTableViewer extends TableViewer {
 
 	private long mHeapSize = 1;
 	private final TableViewerColumn mPrimaryColumn;
-	private TableViewerColumnComparator mActiveColumnComparator;
-	private final DeferredContentProvider mContentProvider;
+	private final MemoryStatisticsContentProvider mContentProvider;
+
+	class MemoryStatisticsContentProvider extends ArrayContentProvider implements ILazyContentProvider {
+		private Comparator<MemoryStatisticsItem> mComparator = Comparator
+				.comparingLong(MemoryStatisticsItem::getMemory);
+		private int mDirection = -1;
+
+		private TableViewer mTableViewer;
+		private Object[] mItems = new MemoryStatisticsItem[0];
+
+		MemoryStatisticsContentProvider(TableViewer tableViewer) {
+			mTableViewer = tableViewer;
+		}
+
+		@Override
+		public void updateElement(int index) {
+			if (index >= mItems.length) {
+				return;
+			}
+			mTableViewer.replace(mItems[index], index);
+		}
+
+		@Override
+		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+			mItems = (MemoryStatisticsItem[]) newInput;
+		}
+
+		void setInput(Object input) {
+			Object selected = null;
+			if (mTableViewer.getTable().getSelection().length > 0) {
+				selected = mTableViewer.getTable().getSelection()[0].getData();
+			}
+
+			Object[] items = getElements(input);
+			items = Arrays.stream(items).filter(item -> ((MemoryStatisticsItem) item).getSize() > 0).toArray();
+			mItems = Arrays.copyOf(items, items.length, MemoryStatisticsItem[].class);
+			sort(mComparator, mDirection);
+			mTableViewer.setItemCount(mItems.length);
+
+			int index = Arrays.asList(mItems).indexOf(selected);
+			if (index == -1) {
+				mTableViewer.getTable().deselectAll();
+				return;
+			}
+
+			mTableViewer.getTable().setSelection(index);
+		}
+
+		void sort(Comparator<MemoryStatisticsItem> comparator, int direction) {
+			mComparator = comparator;
+			mDirection = direction;
+			if (mComparator != null) {
+				Arrays.sort(mItems, (o1, o2) -> comparator.compare((MemoryStatisticsItem) o1, (MemoryStatisticsItem) o2)
+						* direction);
+			}
+			mTableViewer.setInput(mItems);
+		}
+
+		Comparator<MemoryStatisticsItem> getSortingComparator() {
+			return mComparator;
+		}
+
+		int getSortingDirection() {
+			return mDirection;
+		}
+
+	}
 
 	MemoryStatisticsTableViewer(Composite parent, int style, Function<MemoryStatisticsItem, Color> colorProvider) {
 		super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
 
-		// FIXME: Bug 165637 - [Viewers] ArrayIndexOutOfBoundsException exception in ConcurrentTableUpdator (used in DeferredContentProvider)
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=165637
-		mContentProvider = new DeferredContentProvider((lhs, rhs) -> 0);
-		mContentProvider.setFilter(element -> ((MemoryStatisticsItem) element).getSize() > 0);
+		mContentProvider = new MemoryStatisticsContentProvider(this);
 		setContentProvider(mContentProvider);
 
 		mPrimaryColumn = createTableColumnViewer("Name", //
 				MemoryStatisticsItem::getName, //
 				null, //
-				colorProvider, (lhs, rhs) -> lhs.getName().compareTo(rhs.getName()), //
-				false);
+				colorProvider, //
+				Comparator.comparing(MemoryStatisticsItem::getName));
 
-		createTableColumnViewer("Memory KB", //
+		TableViewerColumn sortingColumn = createTableColumnViewer("Memory KB", //
 				model -> String.format("%,.2f (%d%%)", //
 						(double) model.getMemory() / 1024f, //
 						Math.round((double) model.getMemory() * 100f / (double) mHeapSize)), //
 				model -> String.format("%,d Bytes", model.getMemory()), //
 				null, //
-				(lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()), true);
+				mContentProvider.getSortingComparator());
 
 		createTableColumnViewer("Overhead KB", //
 				model -> String.format("%,.2f (%d%%)", //
@@ -58,23 +121,25 @@ class MemoryStatisticsTableViewer extends TableViewer {
 						Math.round((double) model.getOverhead() * 100f / (double) mHeapSize)), //
 				model -> String.format("%,d Bytes", model.getMemory()), //
 				null, //
-				(lhs, rhs) -> (int) (lhs.getOverhead() - rhs.getOverhead()), false);
+				Comparator.comparingLong(MemoryStatisticsItem::getMemory));
 
 		createTableColumnViewer("Objects", //
 				model -> String.format("%,d", model.getSize()), //
 				null, //
 				null, //
-				(lhs, rhs) -> lhs.getSize() - rhs.getSize(), false);
+				Comparator.comparingInt(MemoryStatisticsItem::getSize));
 
+		getTable().setSortColumn(sortingColumn.getColumn());
+		getTable().setSortDirection(SWT.DOWN);
 		getTable().setLinesVisible(true);
 		getTable().setHeaderVisible(true);
 		ColumnViewerToolTipSupport.enableFor(this);
 	}
 
-	private TableViewerColumn createTableColumnViewer(
-			String label, Function<MemoryStatisticsItem, String> labelProvider,
+	private TableViewerColumn createTableColumnViewer(String label,
+			Function<MemoryStatisticsItem, String> labelProvider,
 			Function<MemoryStatisticsItem, String> toolTipProvider, Function<MemoryStatisticsItem, Color> colorProvider,
-			BiFunction<MemoryStatisticsItem, MemoryStatisticsItem, Integer> comparator, boolean sort) {
+			Comparator<MemoryStatisticsItem> comparator) {
 		TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
 		column.getColumn().setWidth(200);
 		column.getColumn().setText(label);
@@ -85,11 +150,6 @@ class MemoryStatisticsTableViewer extends TableViewer {
 			protected void paint(Event event, Object element) {
 				Widget item = event.item;
 
-				if (element == null) {
-					// FIXME: Bug 146799 - Blank last table item on virtual table
-					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
-					return;
-				}
 				Rectangle bounds = ((TableItem) item).getBounds(event.index);
 				Color bg = event.gc.getBackground();
 				Color fg = event.gc.getForeground();
@@ -132,62 +192,29 @@ class MemoryStatisticsTableViewer extends TableViewer {
 			}
 		});
 
-		TableViewerColumnComparator cmp = new TableViewerColumnComparator() {
+		column.getColumn().addSelectionListener(new SelectionAdapter() {
 			@Override
-			int doCompare(Object e1, Object e2) {
-				return comparator.apply((MemoryStatisticsItem) e1, (MemoryStatisticsItem) e2);
-			}
-		};
+			public void widgetSelected(SelectionEvent e) {
+				Comparator<MemoryStatisticsItem> newComparator = mContentProvider.getSortingComparator();
+				int newDirection = mContentProvider.getSortingDirection();
+				if (mContentProvider.getSortingComparator() == comparator) {
+					newDirection *= -1;
+				} else {
+					newComparator = comparator;
+					newDirection = -1;
+				}
 
-		cmp.init(column, sort);
+				getTable().setSortColumn(column.getColumn());
+				getTable().setSortDirection(newDirection == 1 ? SWT.UP : SWT.DOWN);
+				mContentProvider.sort(newComparator, newDirection);
+			}
+		});
 
 		return column;
 	}
 
 	void setHeapSize(long size) {
 		mHeapSize = size;
-	}
-
-	abstract class TableViewerColumnComparator implements Comparator {
-		private boolean decreasing = true;
-
-		TableViewerColumn mColumn;
-
-		void init(TableViewerColumn column, boolean sorted) {
-			mColumn = column;
-
-			mColumn.getColumn().addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					onClicked();
-				}
-			});
-
-			if (sorted) {
-				onClicked();
-			}
-		}
-
-		@SuppressWarnings("Duplicates")
-		private void onClicked() {
-			if (mActiveColumnComparator == this) {
-				decreasing = !decreasing;
-			} else {
-				mActiveColumnComparator = this;
-			}
-
-			mColumn.getColumn().getParent().setSortColumn(mColumn.getColumn());
-			mColumn.getColumn().getParent().setSortDirection(decreasing ? SWT.DOWN : SWT.UP);
-
-			mContentProvider.setSortOrder(this);
-		}
-
-		@Override
-		public int compare(Object e1, Object e2) {
-			return (decreasing ? -1 : 1) * doCompare(e1, e2);
-		}
-
-		abstract int doCompare(Object e1, Object e2);
 	}
 
 	void setPrimaryColumnText(String text) {
