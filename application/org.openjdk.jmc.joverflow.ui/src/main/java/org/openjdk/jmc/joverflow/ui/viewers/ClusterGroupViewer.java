@@ -22,7 +22,6 @@ import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.swt.FilterList;
 import org.openjdk.jmc.joverflow.ui.util.ColorIndexedArcAttributeProvider;
-import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
 import java.util.Collection;
 import java.util.HashMap;

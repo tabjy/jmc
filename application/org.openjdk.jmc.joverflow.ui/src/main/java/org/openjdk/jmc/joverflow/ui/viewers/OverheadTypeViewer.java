@@ -9,7 +9,6 @@ import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.ClusterType;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
-import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
 
 public class OverheadTypeViewer extends BaseViewer {
 
