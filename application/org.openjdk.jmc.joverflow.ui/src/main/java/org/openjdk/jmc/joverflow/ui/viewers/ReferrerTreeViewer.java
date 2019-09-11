@@ -1,10 +1,12 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
+import org.eclipse.jface.viewers.ILazyContentProvider;
 import org.eclipse.jface.viewers.OwnerDrawLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.jface.viewers.deferred.DeferredContentProvider;
+import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -16,8 +18,8 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 // ReferrerTreeViewer is actually a TableViewer with its tree-like content
@@ -25,53 +27,121 @@ class ReferrerTreeViewer extends TableViewer {
 
 	private long mHeapSize = 1;
 
-	private TreeViewerColumnComparator mActiveColumnComparator;
-	private final DeferredContentProvider mContentProvider;
+	private final ReferrerTreeContentProvider mContentProvider;
+
+	class ReferrerTreeContentProvider extends ArrayContentProvider implements ILazyContentProvider {
+		private Comparator<ReferrerItem> mComparator = Comparator.comparingLong(ReferrerItem::getMemory);
+		private int mDirection = -1;
+
+		private TableViewer mTableViewer;
+		private Object[] mItems = new ReferrerItem[0];
+
+		ReferrerTreeContentProvider(TableViewer tableViewer) {
+			mTableViewer = tableViewer;
+		}
+
+		@Override
+		public void updateElement(int index) {
+			if (index >= mItems.length) {
+				return;
+			}
+			mTableViewer.replace(mItems[index], index);
+		}
+
+		@Override
+		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+			mItems = (Object[]) newInput;
+		}
+
+		void setInput(Object input) {
+			Object selected = null;
+			if (mTableViewer.getTable().getSelection().length > 0) {
+				selected = mTableViewer.getTable().getSelection()[0].getData();
+			}
+
+			Object[] items = getElements(input);
+			items = Arrays.stream(items).filter(item -> ((ReferrerItem) item).getSize() > 0).toArray();
+			mItems = Arrays.copyOf(items, items.length, ReferrerItem[].class);
+			sort(mComparator, mDirection);
+			mTableViewer.setItemCount(mItems.length);
+
+			int index = Arrays.asList(mItems).indexOf(selected);
+			if (index == -1) {
+				mTableViewer.getTable().deselectAll();
+				return;
+			}
+
+			mTableViewer.getTable().setSelection(index);
+		}
+
+		void sort(Comparator<ReferrerItem> comparator, int direction) {
+			mComparator = comparator;
+			mDirection = direction;
+			if (mComparator != null) {
+				Arrays.sort(mItems, (o1, o2) -> {
+					if (((ReferrerItem) o1).getLevel() == ((ReferrerItem) o2).getLevel()) {
+						return direction * comparator.compare((ReferrerItem) o1, (ReferrerItem) o2);
+					} else {
+						return ((ReferrerItem) o1).getLevel() - ((ReferrerItem) o2).getLevel();
+					}
+				});
+			}
+
+			mTableViewer.setInput(mItems);
+		}
+
+		Comparator<ReferrerItem> getSortingComparator() {
+			return mComparator;
+		}
+
+		int getSortingDirection() {
+			return mDirection;
+		}
+	}
 
 	ReferrerTreeViewer(Composite parent, int style) {
 		super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
 
-		// FIXME: Bug 165637 - [Viewers] ArrayIndexOutOfBoundsException exception in ConcurrentTableUpdator (used in DeferredContentProvider)
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=165637
-		mContentProvider = new DeferredContentProvider((lhs, rhs) -> 0);
-		mContentProvider.setFilter(element -> ((ReferrerItem) element).getSize() > 0);
+		mContentProvider = new ReferrerTreeContentProvider(this);
 		setContentProvider(mContentProvider);
 
 		createTreeViewerColumn("Referrer", //
 				ReferrerItem::getName, //
 				null, //
-				(lhs, rhs) -> lhs.getName().compareTo(rhs.getName()), //
-				false, true);
+				Comparator.comparing(ReferrerItem::getName), //
+				true);
 
-		createTreeViewerColumn("Memory KiB", //
+		TableViewerColumn sortingColumn = createTreeViewerColumn("Memory KiB", //
 				model -> String.format("%,.2f (%d%%)", //
 						(double) model.getMemory() / 1024f, //
 						Math.round((double) model.getMemory() * 100f / (double) mHeapSize)), //
 				model -> String.format("%,d Bytes", model.getMemory()), //
-				(lhs, rhs) -> (int) (lhs.getMemory() - rhs.getMemory()), //
-				true, false);
+				mContentProvider.getSortingComparator(), //
+				false);
 
 		createTreeViewerColumn("Overhead KiB", //
 				model -> String.format("%,.2f (%d%%)", //
 						(double) model.getOvhd() / 1024f, //
 						Math.round((double) model.getOvhd() * 100f / (double) mHeapSize)), //
 				model -> String.format("%,d Bytes", model.getOvhd()), //
-				(lhs, rhs) -> (int) (lhs.getOvhd() - rhs.getOvhd()), false, false);
+				Comparator.comparingLong(ReferrerItem::getOvhd), false);
 
 		createTreeViewerColumn("Objects", //
 				model -> String.format("%,d", model.getSize()),//
 				null, //
-				(lhs, rhs) -> lhs.getSize() - rhs.getSize(), //
-				false, false);
+				Comparator.comparingInt(ReferrerItem::getSize), //
+				false);
 
+		getTable().setSortColumn(sortingColumn.getColumn());
+		getTable().setSortDirection(SWT.DOWN);
 		getTable().setLinesVisible(true);
 		getTable().setHeaderVisible(true);
 		ColumnViewerToolTipSupport.enableFor(this);
 	}
 
-	private void createTreeViewerColumn(
+	private TableViewerColumn createTreeViewerColumn(
 			String label, Function<ReferrerItem, String> labelProvider, Function<ReferrerItem, String> toolTipProvider,
-			BiFunction<ReferrerItem, ReferrerItem, Integer> comparator, boolean sort, boolean intent) {
+			Comparator<ReferrerItem> comparator, boolean intent) {
 		TableViewerColumn column = new TableViewerColumn(this, SWT.NONE);
 		column.getColumn().setWidth(200);
 		column.getColumn().setText(label);
@@ -82,11 +152,6 @@ class ReferrerTreeViewer extends TableViewer {
 			protected void paint(Event event, Object element) {
 				Widget item = event.item;
 
-				if (element == null) {
-					// FIXME: Bug 146799 - Blank last table item on virtual table
-					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=146799
-					return;
-				}
 				Rectangle bounds = ((TableItem) item).getBounds(event.index);
 				Point p = event.gc.stringExtent(labelProvider.apply((ReferrerItem) element));
 
@@ -119,63 +184,28 @@ class ReferrerTreeViewer extends TableViewer {
 			}
 		});
 
-		TreeViewerColumnComparator cmp = new TreeViewerColumnComparator() {
+		column.getColumn().addSelectionListener(new SelectionAdapter() {
 			@Override
-			int doCompare(Object e1, Object e2) {
-				return comparator.apply((ReferrerItem) e1, (ReferrerItem) e2);
-			}
-		};
+			public void widgetSelected(SelectionEvent e) {
+				Comparator<ReferrerItem> newComparator = mContentProvider.getSortingComparator();
+				int newDirection = mContentProvider.getSortingDirection();
+				if (mContentProvider.getSortingComparator() == comparator) {
+					newDirection *= -1;
+				} else {
+					newComparator = comparator;
+					newDirection = -1;
+				}
 
-		cmp.init(column, sort);
+				getTable().setSortColumn(column.getColumn());
+				getTable().setSortDirection(newDirection == 1 ? SWT.UP : SWT.DOWN);
+				mContentProvider.sort(newComparator, newDirection);
+			}
+		});
+
+		return column;
 	}
 
 	void setHeapSize(long size) {
 		mHeapSize = size;
-	}
-
-	abstract class TreeViewerColumnComparator implements Comparator {
-		private boolean decreasing = true;
-
-		TableViewerColumn mColumn;
-
-		void init(TableViewerColumn column, boolean sorted) {
-			mColumn = column;
-
-			mColumn.getColumn().addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					onClicked();
-				}
-			});
-
-			if (sorted) {
-				onClicked();
-			}
-		}
-
-		@SuppressWarnings("Duplicates")
-		private void onClicked() {
-			if (mActiveColumnComparator == this) {
-				decreasing = !decreasing;
-			} else {
-				mActiveColumnComparator = this;
-			}
-
-			mColumn.getColumn().getParent().setSortColumn(mColumn.getColumn());
-			mColumn.getColumn().getParent().setSortDirection(decreasing ? SWT.DOWN : SWT.UP);
-
-			mContentProvider.setSortOrder(this);
-		}
-
-		@Override
-		public int compare(Object e1, Object e2) {
-			if (((ReferrerItem) e1).getLevel() == ((ReferrerItem) e2).getLevel()) {
-				return (decreasing ? -1 : 1) * doCompare(e1, e2);
-			} else {
-				return ((ReferrerItem) e1).getLevel() - ((ReferrerItem) e2).getLevel();
-			}
-		}
-
-		abstract int doCompare(Object e1, Object e2);
 	}
 }

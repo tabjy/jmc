@@ -51,7 +51,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
 
 		@Override
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-			mItems = (MemoryStatisticsItem[]) newInput;
+			mItems = (Object[]) newInput;
 		}
 
 		void setInput(Object input) {

@@ -11,21 +11,16 @@ import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItemBuilder;
-import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
-
-import java.util.List;
 
 public class ReferrerViewer extends BaseViewer {
 
 	private final ReferrerTreeViewer mTreeViewer;
 	private ReferrerItemBuilder mItemBuilder;
-	private final ConcurrentModelInputWrapper mInputModel = new ConcurrentModelInputWrapper();
 
 	private ReferrerItem mSelectedItem;
 
 	public ReferrerViewer(Composite parent, int style) {
 		mTreeViewer = new ReferrerTreeViewer(parent, style | SWT.FULL_SELECTION);
-		mTreeViewer.setInput(mInputModel);
 
 		mTreeViewer.getControl().addMouseListener(new MouseListener() {
 			@Override
@@ -88,10 +83,10 @@ public class ReferrerViewer extends BaseViewer {
 	@Override
 	public void allIncluded() {
 		if (mItemBuilder == null) {
-			mInputModel.setInput(null);
+			((ReferrerTreeViewer.ReferrerTreeContentProvider) mTreeViewer.getContentProvider()).setInput(null);
 		} else {
-			List<ReferrerItem> list = mItemBuilder.buildReferrerList();
-			mInputModel.setInput(list.toArray());
+			((ReferrerTreeViewer.ReferrerTreeContentProvider) mTreeViewer.getContentProvider())
+					.setInput(mItemBuilder.buildReferrerList());
 			mItemBuilder = null;
 		}
 	}
