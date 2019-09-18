@@ -1,5 +1,9 @@
 package org.openjdk.jmc.joverflow.ui;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
@@ -14,10 +18,6 @@ import org.openjdk.jmc.joverflow.ui.viewers.AncestorViewer;
 import org.openjdk.jmc.joverflow.ui.viewers.ClusterGroupViewer;
 import org.openjdk.jmc.joverflow.ui.viewers.OverheadTypeViewer;
 import org.openjdk.jmc.joverflow.ui.viewers.ReferrerViewer;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public class JOverflowUi extends Composite {
 

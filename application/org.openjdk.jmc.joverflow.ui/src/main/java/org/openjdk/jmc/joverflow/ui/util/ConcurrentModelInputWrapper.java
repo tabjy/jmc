@@ -1,10 +1,10 @@
 package org.openjdk.jmc.joverflow.ui.util;
 
+import java.util.Collection;
+
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.viewers.deferred.IConcurrentModel;
 import org.eclipse.jface.viewers.deferred.IConcurrentModelListener;
-
-import java.util.Collection;
 
 public class ConcurrentModelInputWrapper implements IConcurrentModel {
 	private final ListenerList<IConcurrentModelListener> mModelListeners = new ListenerList<>();

@@ -1,5 +1,8 @@
 package org.openjdk.jmc.joverflow.ui.swt;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
@@ -7,9 +10,6 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class PieChart extends Canvas {
 	private static final int MARGIN = 5;

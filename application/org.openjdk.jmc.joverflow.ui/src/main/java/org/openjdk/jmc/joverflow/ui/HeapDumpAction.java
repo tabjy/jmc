@@ -32,6 +32,11 @@
  */
 package org.openjdk.jmc.joverflow.ui;
 
+import java.io.File;
+
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -49,10 +54,6 @@ import org.openjdk.jmc.ui.common.jvm.JVMDescriptor;
 import org.openjdk.jmc.ui.common.util.Filename;
 import org.openjdk.jmc.ui.misc.DialogToolkit;
 import org.openjdk.jmc.ui.misc.DisplayToolkit;
-
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-import java.io.File;
 
 public class HeapDumpAction implements IActionFactory {
 

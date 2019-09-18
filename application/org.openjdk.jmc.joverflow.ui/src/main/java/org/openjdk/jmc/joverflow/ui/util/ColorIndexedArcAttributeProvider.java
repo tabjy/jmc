@@ -1,12 +1,12 @@
 package org.openjdk.jmc.joverflow.ui.util;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.widgets.Display;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.Display;
 
 public class ColorIndexedArcAttributeProvider extends BaseArcAttributeProvider {
 	private final Color COLOR_GRAY = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);

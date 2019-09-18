@@ -1,5 +1,7 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import java.util.List;
+
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -12,8 +14,6 @@ import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
 import org.openjdk.jmc.joverflow.ui.model.ReferrerItemBuilder;
 import org.openjdk.jmc.joverflow.ui.util.ConcurrentModelInputWrapper;
-
-import java.util.List;
 
 public class ReferrerViewer extends BaseViewer {
 

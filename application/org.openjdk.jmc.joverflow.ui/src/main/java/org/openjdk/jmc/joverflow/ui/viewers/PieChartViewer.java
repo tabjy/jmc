@@ -1,5 +1,9 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -13,10 +17,6 @@ import org.openjdk.jmc.joverflow.ui.util.ArcAttributeChangedEvent;
 import org.openjdk.jmc.joverflow.ui.util.BaseArcAttributeProvider;
 import org.openjdk.jmc.joverflow.ui.util.IArcAttributeProvider;
 import org.openjdk.jmc.joverflow.ui.util.IArcAttributeProviderListener;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 class PieChartViewer extends StructuredViewer {
 

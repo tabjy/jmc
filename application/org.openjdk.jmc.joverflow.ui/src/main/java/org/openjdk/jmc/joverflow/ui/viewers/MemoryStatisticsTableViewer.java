@@ -1,5 +1,9 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import java.util.Comparator;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.OwnerDrawLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
@@ -16,11 +20,6 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
-import org.openjdk.jmc.joverflow.ui.model.ReferrerItem;
-
-import java.util.Comparator;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 class MemoryStatisticsTableViewer extends TableViewer {
 

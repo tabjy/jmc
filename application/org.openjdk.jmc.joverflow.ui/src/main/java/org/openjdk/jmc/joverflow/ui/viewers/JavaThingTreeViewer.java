@@ -1,5 +1,10 @@
 package org.openjdk.jmc.joverflow.ui.viewers;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.StreamSupport;
+
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -12,11 +17,6 @@ import org.openjdk.jmc.joverflow.heap.model.JavaObjectArray;
 import org.openjdk.jmc.joverflow.heap.model.JavaThing;
 import org.openjdk.jmc.joverflow.heap.model.JavaValueArray;
 import org.openjdk.jmc.joverflow.ui.model.JavaThingItem;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
 public class JavaThingTreeViewer<T extends JavaThingItem> extends TreeViewer {
 	public JavaThingTreeViewer(Composite parent, int style) {

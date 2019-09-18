@@ -32,6 +32,13 @@
  */
 package org.openjdk.jmc.joverflow.ui;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IToolBarManager;
@@ -55,13 +62,6 @@ import org.openjdk.jmc.joverflow.ui.model.ModelLoaderListener;
 import org.openjdk.jmc.joverflow.ui.model.ReferenceChain;
 import org.openjdk.jmc.ui.misc.CompositeToolkit;
 import org.openjdk.jmc.ui.misc.DialogToolkit;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class JOverflowEditor extends EditorPart {
 	private final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();

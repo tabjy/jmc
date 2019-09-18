@@ -1,5 +1,8 @@
 package org.openjdk.jmc.joverflow.ui.swt;
 
+import java.util.HashSet;
+import java.util.function.Predicate;
+
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -11,9 +14,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.openjdk.jmc.joverflow.ui.util.FilterChangedListener;
-
-import java.util.HashSet;
-import java.util.function.Predicate;
 
 public class FilterList<T> extends Composite {
 
