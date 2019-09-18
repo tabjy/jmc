@@ -22,7 +22,7 @@ import org.openjdk.jmc.ui.misc.DisplayToolkit;
 
 public class JavaThingPage extends Page implements ModelListener {
 	private final JOverflowEditor mEditor;
-	private JavaThingTreeViewer mTreeViewer;
+	private JavaThingTreeViewer<JavaThingItem> mTreeViewer;
 
 	private static final int MAX = 500;
 	private final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(1);
@@ -42,7 +42,7 @@ public class JavaThingPage extends Page implements ModelListener {
 
 	@Override
 	public void createControl(Composite parent) {
-		mTreeViewer = new JavaThingTreeViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
+		mTreeViewer = new JavaThingTreeViewer<>(parent, SWT.BORDER | SWT.FULL_SELECTION);
 		updateInput();
 	}
 
