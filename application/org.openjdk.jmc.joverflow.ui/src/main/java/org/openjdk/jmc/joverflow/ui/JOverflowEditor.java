@@ -213,6 +213,9 @@ public class JOverflowEditor extends EditorPart {
 		for (UiLoadedListener l : mUiLoadedListeners) {
 			l.uiLoaded(mJOverflowUi);
 		}
+
+		// FIXME: a hack for Eclipse Photon. Remove when we don't build against Photon anymore.
+		parent.layout();
 	}
 
 	@Override
