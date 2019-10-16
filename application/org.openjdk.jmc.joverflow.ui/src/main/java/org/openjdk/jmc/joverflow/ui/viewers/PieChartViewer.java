@@ -66,6 +66,7 @@ class PieChartViewer extends StructuredViewer {
 		updateItems();
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	protected List getSelectionFromWidget() {
 		List<Object> res = new ArrayList<>();
@@ -99,6 +100,7 @@ class PieChartViewer extends StructuredViewer {
 		// intentionally empty
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	protected void setSelectionToWidget(List l, boolean reveal) {
 		if (l == null) {
