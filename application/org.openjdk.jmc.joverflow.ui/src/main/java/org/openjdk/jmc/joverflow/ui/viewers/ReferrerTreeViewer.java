@@ -14,9 +14,11 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
@@ -149,6 +151,8 @@ class ReferrerTreeViewer extends TableViewer {
 		column.getColumn().setMoveable(true);
 
 		column.setLabelProvider(new OwnerDrawLabelProvider() {
+			Color referrerIconColor = new Color(Display.getCurrent(), 116, 184, 250);
+
 			@Override
 			protected void paint(Event event, Object element) {
 				Widget item = event.item;
@@ -158,12 +162,36 @@ class ReferrerTreeViewer extends TableViewer {
 
 				int margin = (bounds.height - p.y) / 2;
 				int dx = bounds.x + margin;
+				int dy = bounds.y + margin * 2;
 
 				if (intent) {
 					dx += 10 * ((ReferrerItem) element).getLevel();
+
+					Color fg = event.gc.getForeground();
+					event.gc.setForeground(referrerIconColor);
+					event.gc.drawPolygon(new int[] {
+							3 + dx, dy, //
+							6 + dx, 7 + dy, //
+							4 + dx, 7 + dy, //
+							4 + dx, 9 + dy, //
+							8 + dx, 9 + dy, //
+							8 + dx, 11 + dy, //
+							2 + dx, 11 + dy, //
+							2 + dx, 7 + dy, //
+							dx, 7 + dy
+					});
+					event.gc.setForeground(fg);
+					dx += 11 + margin;
 				}
 
 				event.gc.drawString(labelProvider.apply((ReferrerItem) element), dx, bounds.y + margin, true);
+			}
+
+			@Override
+			public void dispose() {
+				referrerIconColor.dispose();
+
+				super.dispose();
 			}
 
 			@Override
