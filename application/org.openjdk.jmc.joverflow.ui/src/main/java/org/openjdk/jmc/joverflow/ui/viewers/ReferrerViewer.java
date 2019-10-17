@@ -21,7 +21,7 @@ public class ReferrerViewer extends BaseViewer {
 	private ReferrerItem mSelectedItem;
 
 	public ReferrerViewer(Composite parent, int style) {
-		mTreeViewer = new ReferrerTreeViewer(parent, style | SWT.FULL_SELECTION);
+		mTreeViewer = new ReferrerTreeViewer(parent, style | SWT.FULL_SELECTION | SWT.BORDER);
 
 		mTreeViewer.getControl().addMouseListener(new MouseListener() {
 			@Override

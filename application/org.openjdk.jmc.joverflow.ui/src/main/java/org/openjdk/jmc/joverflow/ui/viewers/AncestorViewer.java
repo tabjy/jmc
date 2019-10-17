@@ -21,7 +21,6 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
@@ -51,7 +50,7 @@ public class AncestorViewer extends BaseViewer {
 		mContainer = new SashForm(parent, style);
 
 		{
-			Group leftContainer = new Group(mContainer, SWT.NONE);
+			Composite leftContainer = new Composite(mContainer, SWT.BORDER);
 			leftContainer.setLayout(new FormLayout());
 
 			Label title = new Label(leftContainer, SWT.NONE);
@@ -130,7 +129,7 @@ public class AncestorViewer extends BaseViewer {
 		}
 
 		{
-			Group tableContainer = new Group(mContainer, SWT.NONE);
+			Composite tableContainer = new Composite(mContainer, SWT.BORDER);
 			tableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.NONE,

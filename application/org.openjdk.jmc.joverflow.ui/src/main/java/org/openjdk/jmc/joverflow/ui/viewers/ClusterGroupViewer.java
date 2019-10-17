@@ -20,7 +20,6 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 
 import org.openjdk.jmc.joverflow.support.RefChainElement;
@@ -46,7 +45,7 @@ public class ClusterGroupViewer extends BaseViewer {
 		mContainer = new SashForm(parent, style);
 
 		{
-			Group leftContainer = new Group(mContainer, SWT.NONE);
+			Composite leftContainer = new Composite(mContainer, SWT.BORDER);
 			leftContainer.setLayout(new FormLayout());
 
 			mTitle = new Label(leftContainer, SWT.NONE);
@@ -97,7 +96,7 @@ public class ClusterGroupViewer extends BaseViewer {
 		}
 
 		{
-			Group tableContainer = new Group(mContainer, SWT.NONE);
+			Composite tableContainer = new Composite(mContainer, SWT.BORDER);
 			tableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.NONE,

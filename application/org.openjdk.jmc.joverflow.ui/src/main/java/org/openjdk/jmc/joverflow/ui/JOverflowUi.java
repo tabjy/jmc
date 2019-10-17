@@ -8,7 +8,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
 
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.ClusterType;
@@ -41,7 +40,7 @@ public class JOverflowUi extends Composite {
 			SashForm vSashLeft = new SashForm(hSash, SWT.VERTICAL);
 			// Type Viewer (top-left)
 			{
-				Group topLeftContainer = new Group(vSashLeft, SWT.NONE);
+				Composite topLeftContainer = new Composite(vSashLeft, SWT.NONE);
 				topLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 				mOverheadTypeViewer = new OverheadTypeViewer(topLeftContainer, SWT.NONE);
@@ -50,7 +49,7 @@ public class JOverflowUi extends Composite {
 
 			// Cluster Group Viewer (bottom-left)
 			{
-				Group bottomLeftContainer = new Group(vSashLeft, SWT.NONE);
+				Composite bottomLeftContainer = new Composite(vSashLeft, SWT.NONE);
 				bottomLeftContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 				mClusterGroupViewer = new ClusterGroupViewer(bottomLeftContainer, SWT.NONE);
@@ -63,7 +62,7 @@ public class JOverflowUi extends Composite {
 			SashForm vSashRight = new SashForm(hSash, SWT.VERTICAL);
 			// Referrer Viewer (top-right)
 			{
-				Group topRightContainer = new Group(vSashRight, SWT.NONE);
+				Composite topRightContainer = new Composite(vSashRight, SWT.NONE);
 				topRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 				mReferrerViewer = new ReferrerViewer(topRightContainer, SWT.NONE);
@@ -72,7 +71,7 @@ public class JOverflowUi extends Composite {
 
 			// Ancestor Viewer (bottom-right)
 			{
-				Group bottomRightContainer = new Group(vSashRight, SWT.NONE);
+				Composite bottomRightContainer = new Composite(vSashRight, SWT.NONE);
 				bottomRightContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 				mAncestorViewer = new AncestorViewer(bottomRightContainer, SWT.NONE);
