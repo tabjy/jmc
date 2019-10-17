@@ -151,6 +151,8 @@ class MemoryStatisticsTableViewer extends TableViewer {
 			protected void paint(Event event, Object element) {
 				Widget item = event.item;
 
+				event.gc.setAntialias(SWT.ON);
+
 				Rectangle bounds = ((TableItem) item).getBounds(event.index);
 				Color bg = event.gc.getBackground();
 				Color fg = event.gc.getForeground();

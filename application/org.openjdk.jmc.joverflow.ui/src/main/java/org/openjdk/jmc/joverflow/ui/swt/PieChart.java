@@ -20,11 +20,13 @@ public class PieChart extends Canvas {
 	private ArcItem mHighlightedItem;
 
 	public PieChart(Composite parent, int style) {
-		super(parent, style);
+		super(parent, style | SWT.DOUBLE_BUFFERED);
 
 		setLayout(new FillLayout());
 
 		addPaintListener((e) -> {
+			e.gc.setAntialias(SWT.ON);
+
 			int x = this.getClientArea().width / 2;
 			int y = this.getClientArea().height / 2;
 
@@ -57,8 +59,12 @@ public class PieChart extends Canvas {
 		addListener(SWT.Resize, (Event e) -> redraw());
 
 		addMouseMoveListener(e -> {
+			ArcItem oldItem = mHighlightedItem;
 			mHighlightedItem = getItem(new Point(e.x, e.y));
-			redraw();
+
+			if (oldItem != mHighlightedItem) {
+				redraw();
+			}
 		});
 	}
 

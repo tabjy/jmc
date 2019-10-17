@@ -157,6 +157,8 @@ class ReferrerTreeViewer extends TableViewer {
 			protected void paint(Event event, Object element) {
 				Widget item = event.item;
 
+				event.gc.setAntialias(SWT.ON);
+
 				Rectangle bounds = ((TableItem) item).getBounds(event.index);
 				Point p = event.gc.stringExtent(labelProvider.apply((ReferrerItem) element));
 
