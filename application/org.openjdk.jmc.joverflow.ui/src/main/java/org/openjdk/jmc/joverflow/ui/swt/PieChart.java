@@ -168,7 +168,7 @@ public class PieChart extends Canvas {
 		}
 
 		mHighlightedItem = item;
-		
+
 		if (mHighlightedItem != oldItem) {
 			redraw();
 		}

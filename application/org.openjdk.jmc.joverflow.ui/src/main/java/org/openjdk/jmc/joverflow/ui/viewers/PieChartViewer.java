@@ -239,14 +239,14 @@ class PieChartViewer extends StructuredViewer {
 			mPieChart.setHighlightedItem(null);
 			return;
 		}
-		
+
 		for (ArcItem item : mPieChart.getItems()) {
 			if (item.getData() == element) {
 				mPieChart.setHighlightedItem(item);
 				return;
 			}
 		}
-		
+
 		mPieChart.setHighlightedItem(null);
 	}
 

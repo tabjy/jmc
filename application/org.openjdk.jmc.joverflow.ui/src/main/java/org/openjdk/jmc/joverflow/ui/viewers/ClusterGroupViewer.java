@@ -169,7 +169,7 @@ public class ClusterGroupViewer extends BaseViewer {
 					if (item == null) {
 						return;
 					}
-					
+
 					if (item.getData() == null) {
 						return;
 					}

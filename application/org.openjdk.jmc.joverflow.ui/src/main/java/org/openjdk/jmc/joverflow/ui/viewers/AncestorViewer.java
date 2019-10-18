@@ -238,7 +238,7 @@ public class AncestorViewer extends BaseViewer {
 		}
 
 		mContainer.setWeights(new int[] {1, 2});
-		
+
 		mTableViewer.setPieChartViewer(mPieChart);
 		mPieChart.setTableViewer(mTableViewer);
 	}
