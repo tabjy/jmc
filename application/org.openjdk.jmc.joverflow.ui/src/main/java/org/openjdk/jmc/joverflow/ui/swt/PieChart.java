@@ -59,12 +59,7 @@ public class PieChart extends Canvas {
 		addListener(SWT.Resize, (Event e) -> redraw());
 
 		addMouseMoveListener(e -> {
-			ArcItem oldItem = mHighlightedItem;
-			mHighlightedItem = getItem(new Point(e.x, e.y));
-
-			if (oldItem != mHighlightedItem) {
-				redraw();
-			}
+			setHighlightedItem(getItem(new Point(e.x, e.y)));
 		});
 	}
 
@@ -167,15 +162,15 @@ public class PieChart extends Canvas {
 	}
 
 	public void setHighlightedItem(ArcItem item) {
-		if (item == null) {
-			mHighlightedItem = null;
-			return;
-		}
-
-		if (!mArcs.contains(item)) {
+		ArcItem oldItem = mHighlightedItem;
+		if (item != null && !mArcs.contains(item)) {
 			throw new IllegalArgumentException("invalid item");
 		}
 
 		mHighlightedItem = item;
+		
+		if (mHighlightedItem != oldItem) {
+			redraw();
+		}
 	}
 }

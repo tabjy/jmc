@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Widget;
 
+import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 import org.openjdk.jmc.joverflow.ui.swt.ArcItem;
 import org.openjdk.jmc.joverflow.ui.swt.PieChart;
 import org.openjdk.jmc.joverflow.ui.util.ArcAttributeChangedEvent;
@@ -25,6 +26,8 @@ class PieChartViewer extends StructuredViewer {
 	private IArcAttributeProvider mArcAttributeProvider = new BaseArcAttributeProvider();
 	private ArcItem mOtherArc;
 	private int mMinimumArcAngle = 0;
+	private ArcItem mHighlighted;
+	private MemoryStatisticsTableViewer mTableViewer;
 
 	private List<Object> mInputs = new ArrayList<>();
 
@@ -38,6 +41,24 @@ class PieChartViewer extends StructuredViewer {
 
 	public PieChartViewer(PieChart pieChart) {
 		mPieChart = pieChart;
+
+		mPieChart.addMouseMoveListener(e -> {
+			if (mHighlighted == mPieChart.getHighlightedItem()) {
+				return;
+			}
+
+			mHighlighted = mPieChart.getHighlightedItem();
+
+			if (mTableViewer == null) {
+				return;
+			}
+
+			if (mHighlighted != null) {
+				mTableViewer.setHighlightedItem((MemoryStatisticsItem) mHighlighted.getData());
+			} else {
+				mTableViewer.setHighlightedItem(null);
+			}
+		});
 	}
 
 	public PieChart getPieChart() {
@@ -178,6 +199,7 @@ class PieChartViewer extends StructuredViewer {
 			angleSum += w;
 			item.setAngle(w);
 			item.setColor(mArcAttributeProvider.getColor(input));
+			item.setData(input);
 		}
 
 		if (otherAngle != 0) {
@@ -206,6 +228,26 @@ class PieChartViewer extends StructuredViewer {
 				break;
 			}
 		}
+	}
+
+	public void setTableViewer(MemoryStatisticsTableViewer tableViewer) {
+		mTableViewer = tableViewer;
+	}
+
+	public void setHighlightedItem(Object element) {
+		if (element == null) {
+			mPieChart.setHighlightedItem(null);
+			return;
+		}
+		
+		for (ArcItem item : mPieChart.getItems()) {
+			if (item.getData() == element) {
+				mPieChart.setHighlightedItem(item);
+				return;
+			}
+		}
+		
+		mPieChart.setHighlightedItem(null);
 	}
 
 	public void setMinimumArcAngle(int angle) {

@@ -3,6 +3,7 @@ package org.openjdk.jmc.joverflow.ui.viewers;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -28,6 +29,7 @@ import org.openjdk.jmc.flightrecorder.ui.FlightRecorderUI;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
+import org.openjdk.jmc.joverflow.ui.swt.ArcItem;
 import org.openjdk.jmc.joverflow.ui.swt.FilterList;
 import org.openjdk.jmc.joverflow.ui.util.ColorIndexedArcAttributeProvider;
 
@@ -132,8 +134,80 @@ public class AncestorViewer extends BaseViewer {
 			Composite tableContainer = new Composite(mContainer, SWT.BORDER);
 			tableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.NONE,
-					(e) -> mPieChart.getArcAttributeProvider().getColor(e));
+			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.NONE);
+
+			BiConsumer<MemoryStatisticsItem, Boolean> addFilter = (item, exclusion) -> {
+				if (item.getId() == null) {
+					return;
+				}
+
+				mFilterList.addFilter(new Predicate<RefChainElement>() {
+					final String ancestor = item.getId().toString();
+					final boolean excluded = exclusion;
+
+					@Override
+					public boolean test(RefChainElement referrer) {
+						while (referrer != null) {
+							String refName = referrer.toString();
+							if (ancestor.equals(refName)) {
+								return !excluded;
+							}
+							referrer = referrer.getReferer();
+						}
+						return excluded;
+					}
+
+					@Override
+					public String toString() {
+						return "Ancestors" + (excluded ? " \u220C " : " \u220B ")
+								+ ancestor; //$NON-NLS-2$ //$NON-NLS-3$
+					}
+
+					@Override
+					public int hashCode() {
+						return ancestor.hashCode();
+					}
+
+					@Override
+					public boolean equals(Object obj) {
+						if (obj == null) {
+							return false;
+						}
+						if (getClass() != obj.getClass()) {
+							return false;
+						}
+
+						return hashCode() == obj.hashCode();
+					}
+				});
+
+			};
+
+			mPieChart.getPieChart().addMouseListener(new MouseListener() {
+				@Override
+				public void mouseDoubleClick(MouseEvent e) {
+					// no op
+				}
+
+				@Override
+				public void mouseDown(MouseEvent e) {
+					// no op
+				}
+
+				@Override
+				public void mouseUp(MouseEvent e) {
+					ArcItem item = mPieChart.getPieChart().getHighlightedItem();
+					if (item == null) {
+						return;
+					}
+
+					if (item.getData() == null) {
+						return;
+					}
+
+					addFilter.accept((MemoryStatisticsItem) item.getData(), e.button != 1);
+				}
+			});
 
 			mTableViewer.getTable().addMouseListener(new MouseListener() {
 				@Override
@@ -158,54 +232,15 @@ public class AncestorViewer extends BaseViewer {
 
 					IStructuredSelection selection = (IStructuredSelection) mTableViewer.getSelection();
 					MemoryStatisticsItem item = (MemoryStatisticsItem) selection.getFirstElement();
-					if (item.getId() == null) {
-						return;
-					}
-
-					mFilterList.addFilter(new Predicate<RefChainElement>() {
-						final String ancestor = item.getId().toString();
-						final boolean excluded = e.button == 3;
-
-						@Override
-						public boolean test(RefChainElement referrer) {
-							while (referrer != null) {
-								String refName = referrer.toString();
-								if (ancestor.equals(refName)) {
-									return !excluded;
-								}
-								referrer = referrer.getReferer();
-							}
-							return excluded;
-						}
-
-						@Override
-						public String toString() {
-							return "Ancestors" + (excluded ? " \u220C " : " \u220B ")
-									+ ancestor; //$NON-NLS-2$ //$NON-NLS-3$
-						}
-
-						@Override
-						public int hashCode() {
-							return ancestor.hashCode();
-						}
-
-						@Override
-						public boolean equals(Object obj) {
-							if (obj == null) {
-								return false;
-							}
-							if (getClass() != obj.getClass()) {
-								return false;
-							}
-
-							return hashCode() == obj.hashCode();
-						}
-					});
+					addFilter.accept(item, e.button != 1);
 				}
 			});
 		}
 
 		mContainer.setWeights(new int[] {1, 2});
+		
+		mTableViewer.setPieChartViewer(mPieChart);
+		mPieChart.setTableViewer(mTableViewer);
 	}
 
 	@Override

@@ -25,7 +25,7 @@ public class OverheadTypeViewer extends BaseViewer {
 			mItems[t.ordinal()] = new MemoryStatisticsItem(t, 0, 0, 0);
 		}
 
-		mTableViewer = new MemoryStatisticsTableViewer(parent, style | SWT.FULL_SELECTION | SWT.BORDER, null);
+		mTableViewer = new MemoryStatisticsTableViewer(parent, style | SWT.FULL_SELECTION | SWT.BORDER);
 		mTableViewer.setPrimaryColumnText("Object Selection");
 
 		mTableViewer.addSelectionChangedListener(event -> setCurrentType(getSelectedType()));

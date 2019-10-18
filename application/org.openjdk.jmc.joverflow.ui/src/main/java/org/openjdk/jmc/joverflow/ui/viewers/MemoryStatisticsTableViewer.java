@@ -11,7 +11,10 @@ import org.eclipse.jface.viewers.OwnerDrawLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -29,6 +32,8 @@ class MemoryStatisticsTableViewer extends TableViewer {
 	private long mHeapSize = 1;
 	private final TableViewerColumn mPrimaryColumn;
 	private final MemoryStatisticsContentProvider mContentProvider;
+	private MemoryStatisticsItem mHighlightedItem = null;
+	private PieChartViewer mPieChartViewer;
 
 	static class MemoryStatisticsContentProvider extends ArrayContentProvider implements ILazyContentProvider {
 		private Comparator<MemoryStatisticsItem> mComparator = Comparator
@@ -96,7 +101,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
 
 	}
 
-	MemoryStatisticsTableViewer(Composite parent, int style, Function<MemoryStatisticsItem, Color> colorProvider) {
+	MemoryStatisticsTableViewer(Composite parent, int style) {
 		super(parent, style | SWT.VIRTUAL | SWT.FULL_SELECTION);
 
 		mContentProvider = new MemoryStatisticsContentProvider(this);
@@ -105,7 +110,7 @@ class MemoryStatisticsTableViewer extends TableViewer {
 		mPrimaryColumn = createTableColumnViewer("Name", //
 				MemoryStatisticsItem::getName, //
 				null, //
-				colorProvider, //
+				(item) -> mPieChartViewer != null ? mPieChartViewer.getArcAttributeProvider().getColor(item) : null, //
 				Comparator.comparing(MemoryStatisticsItem::getName));
 
 		TableViewerColumn sortingColumn = createTableColumnViewer("Memory KB", //
@@ -135,6 +140,49 @@ class MemoryStatisticsTableViewer extends TableViewer {
 		getTable().setLinesVisible(true);
 		getTable().setHeaderVisible(true);
 		ColumnViewerToolTipSupport.enableFor(this);
+
+		this.getTable().addMouseMoveListener(e -> {
+			ViewerRow row = MemoryStatisticsTableViewer.this.getViewerRow(new Point(e.x, e.y));
+			if (row == null) {
+				setHighlightedItem(null);
+			} else {
+				setHighlightedItem((MemoryStatisticsItem) row.getElement());
+			}
+		});
+
+		this.getTable().addMouseTrackListener(new MouseTrackAdapter() {
+			@Override
+			public void mouseExit(MouseEvent e) {
+				setHighlightedItem(null);
+			}
+
+			public void mouseEnter(MouseEvent e) {
+				setHighlightedItem(null);
+			}
+		});
+	}
+
+	public void setPieChartViewer(PieChartViewer pieChartViewer) {
+		mPieChartViewer = pieChartViewer;
+	}
+
+	public void setHighlightedItem(MemoryStatisticsItem item) {
+		if (mHighlightedItem != item) {
+			MemoryStatisticsItem oldItem = mHighlightedItem;
+			mHighlightedItem = item;
+
+			if (oldItem != null) {
+				mPrimaryColumn.getViewer().update(oldItem, null);
+			}
+
+			if (mHighlightedItem != null) {
+				mPrimaryColumn.getViewer().update(mHighlightedItem, null);
+			}
+		}
+
+		if (mPieChartViewer != null) {
+			mPieChartViewer.setHighlightedItem(item);
+		}
 	}
 
 	private TableViewerColumn createTableColumnViewer(String label,
@@ -163,11 +211,17 @@ class MemoryStatisticsTableViewer extends TableViewer {
 				int dx = bounds.x + margin;
 
 				if (colorProvider != null) {
-					event.gc.setBackground(colorProvider.apply((MemoryStatisticsItem) element));
-					event.gc.fillArc(dx, bounds.y + margin + margin, p.y - margin - margin, p.y - margin - margin, 0,
-							360);
-
-					dx += p.y + margin;
+					Color color = colorProvider.apply((MemoryStatisticsItem) element);
+					if (color != null) {
+						event.gc.setBackground(color);
+						if (mHighlightedItem == element) {
+							event.gc.fillArc(dx - margin / 2, bounds.y + margin * 2, p.y - margin, p.y - margin, 0,
+									360);
+						} else {
+							event.gc.fillArc(dx, bounds.y + margin * 2, p.y - margin * 2, p.y - margin * 2, 0, 360);
+						}
+						dx += p.y + margin;
+					}
 				}
 
 				event.gc.drawString(labelProvider.apply((MemoryStatisticsItem) element), dx, bounds.y + margin, true);

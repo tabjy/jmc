@@ -3,6 +3,7 @@ package org.openjdk.jmc.joverflow.ui.viewers;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -25,6 +26,7 @@ import org.eclipse.swt.widgets.Label;
 import org.openjdk.jmc.joverflow.support.RefChainElement;
 import org.openjdk.jmc.joverflow.ui.model.MemoryStatisticsItem;
 import org.openjdk.jmc.joverflow.ui.model.ObjectCluster;
+import org.openjdk.jmc.joverflow.ui.swt.ArcItem;
 import org.openjdk.jmc.joverflow.ui.swt.FilterList;
 import org.openjdk.jmc.joverflow.ui.util.ColorIndexedArcAttributeProvider;
 
@@ -99,8 +101,82 @@ public class ClusterGroupViewer extends BaseViewer {
 			Composite tableContainer = new Composite(mContainer, SWT.BORDER);
 			tableContainer.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.NONE,
-					(e) -> mPieChart.getArcAttributeProvider().getColor(e));
+			mTableViewer = new MemoryStatisticsTableViewer(tableContainer, SWT.NONE);
+
+			BiConsumer<MemoryStatisticsItem, Boolean> addFilter = (item, exclusion) -> {
+				if (item.getId() == null) {
+					return;
+				}
+
+				mFilterList.addFilter(new Predicate<ObjectCluster>() {
+
+					final String qualifierName = mQualifierName;
+					final String itemName = item.getId().toString();
+					final boolean excluded = exclusion;
+
+					@Override
+					public boolean test(ObjectCluster oc) {
+						if (qualifierName == null) {
+							return itemName.equals(oc.getClassName()) ^ excluded;
+						}
+
+						if (oc.getQualifier() == null) {
+							return true;
+						}
+
+						return itemName.equals(oc.getQualifier()) ^ excluded;
+					}
+
+					@Override
+					public String toString() {
+						return (qualifierName == null ? "Class" : mQualifierName) + (excluded ? " ≠ " : " = ") //$NON-NLS-1$ //$NON-NLS-2$
+								+ item.getId().toString();
+					}
+
+					@Override
+					public int hashCode() {
+						return itemName.hashCode();
+					}
+
+					@Override
+					public boolean equals(Object obj) {
+						if (obj == null) {
+							return false;
+						}
+						if (getClass() != obj.getClass()) {
+							return false;
+						}
+
+						return hashCode() == obj.hashCode();
+					}
+				});
+			};
+
+			mPieChart.getPieChart().addMouseListener(new MouseListener() {
+				@Override
+				public void mouseDoubleClick(MouseEvent e) {
+					// no op
+				}
+
+				@Override
+				public void mouseDown(MouseEvent e) {
+					// no op
+				}
+
+				@Override
+				public void mouseUp(MouseEvent e) {
+					ArcItem item = mPieChart.getPieChart().getHighlightedItem();
+					if (item == null) {
+						return;
+					}
+					
+					if (item.getData() == null) {
+						return;
+					}
+
+					addFilter.accept((MemoryStatisticsItem) item.getData(), e.button != 1);
+				}
+			});
 
 			mTableViewer.getTable().addMouseListener(new MouseListener() {
 				@Override
@@ -124,57 +200,15 @@ public class ClusterGroupViewer extends BaseViewer {
 					}
 					IStructuredSelection selection = (IStructuredSelection) mTableViewer.getSelection();
 					MemoryStatisticsItem item = (MemoryStatisticsItem) selection.getFirstElement();
-					if (item.getId() == null) {
-						return;
-					}
-
-					mFilterList.addFilter(new Predicate<ObjectCluster>() {
-						final String qualifierName = mQualifierName;
-						final String itemName = item.getId().toString();
-						final boolean excluded = e.button == 3;
-
-						@Override
-						public boolean test(ObjectCluster oc) {
-							if (qualifierName == null) {
-								return itemName.equals(oc.getClassName()) ^ excluded;
-							}
-
-							if (oc.getQualifier() == null) {
-								return true;
-							}
-
-							return itemName.equals(oc.getQualifier()) ^ excluded;
-						}
-
-						@Override
-						public String toString() {
-							return (qualifierName == null ? "Class" : mQualifierName) + (excluded ? " ≠ " : " = ")
-									//$NON-NLS-1$ //$NON-NLS-2$
-									+ item.getId().toString();
-						}
-
-						@Override
-						public int hashCode() {
-							return itemName.hashCode();
-						}
-
-						@Override
-						public boolean equals(Object obj) {
-							if (obj == null) {
-								return false;
-							}
-							if (getClass() != obj.getClass()) {
-								return false;
-							}
-
-							return hashCode() == obj.hashCode();
-						}
-					});
+					addFilter.accept(item, e.button != 1);
 				}
 			});
 		}
 
 		mContainer.setWeights(new int[] {1, 2});
+
+		mTableViewer.setPieChartViewer(mPieChart);
+		mPieChart.setTableViewer(mTableViewer);
 	}
 
 	@Override
